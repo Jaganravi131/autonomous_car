@@ -354,6 +354,13 @@ I cannot put your hardware on a bench, so here is exactly **what has been proven
 | Dashboard JavaScript syntax (`node --check`) | ✅ pass |
 | Every called function is defined; braces/parens balanced | ✅ pass |
 
+**Re-run these checks yourself at any time — one command, no hardware needed:**
+```bash
+python3 tools/verify_build.py
+# → RESULT: 18 passed, 0 failed   (the 1 skip is the ESP32 sketch, which needs the Arduino IDE)
+```
+It re-checks the sketch folder rules, compiles all sketches, runs the whole ML pipeline, verifies every README link, and confirms the pin numbers in the wiring table still match `complete_car.ino`.
+
 ### ⚠️ Requires real hardware to confirm (do these on the bench first)
 
 1. **Motor direction polarity** — if a side runs backwards, swap that pair's two wires on `OUT1/OUT2` or `OUT3/OUT4`. This is wiring, not code.
@@ -401,6 +408,8 @@ autonomous_car/
 ├── README.md                                                 # Complete Roadmap, Wiring Table & ML Guide
 ├── complete_car/
 │   └── complete_car.ino                                      # ⭐ THE ONE FILE: full car, 4 modes (M/A/C/S)
+├── tools/
+│   └── verify_build.py                                       # One-command health check for the whole repo
 ├── schematics/
 │   ├── full_wiring_schematic.png                             # High-res Breadboard-less Wiring Schematic
 │   ├── full_wiring_schematic.svg                             # Vector Wiring Schematic
