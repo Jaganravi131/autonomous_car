@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1120" viewBox="0 0 1600 1120" font-family="DejaVu Sans, Arial, Helvetica, sans-serif">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+    <linearGradient id="arduinoGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0284c7"/>
+      <stop offset="100%" stop-color="#0369a1"/>
+    </linearGradient>
+    <linearGradient id="l298Grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#b91c1c"/>
+      <stop offset="100%" stop-color="#7f1d1d"/>
+    </linearGradient>
+    <linearGradient id="buckGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1d4ed8"/>
+      <stop offset="100%" stop-color="#1e3a8a"/>
+    </linearGradient>
+    <linearGradient id="espGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#334155"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="sensorGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#047857"/>
+      <stop offset="100%" stop-color="#064e3b"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1600" height="1120" fill="url(#bgGrad)"/>
+
+  <!-- Title Banner -->
+  <rect x="20" y="16" width="1560" height="68" rx="10" fill="#1e293b" stroke="#38bdf8" stroke-width="2"/>
+  <text x="800" y="45" fill="#f8fafc" font-size="24" font-weight="bold" text-anchor="middle">4WD AUTONOMOUS CAR — COMPLETE BREADBOARD-LESS WIRING SCHEMATIC</text>
+  <text x="800" y="70" fill="#94a3b8" font-size="14" text-anchor="middle">Phase 1 (Ultrasonic + 230° Servo)  |  Phase 2 (+ 2x IR Sensors)  |  Phase 3 (+ ESP32-CAM &amp; ML Control) — All Powered via Buck Converter</text>
+
+  <!-- ==================== 1. BATTERY PACK (TOP LEFT) ==================== -->
+  <rect x="40" y="110" width="250" height="145" rx="10" fill="#1e293b" stroke="#f59e0b" stroke-width="2.5"/>
+  <rect x="40" y="110" width="250" height="34" rx="8" fill="#f59e0b"/>
+  <text x="165" y="133" fill="#0f172a" font-size="15" font-weight="bold" text-anchor="middle">1. BATTERY PACK (7.4V - 12V)</text>
+  <text x="58" y="165" fill="#e2e8f0" font-size="13">2S/3S 18650 Li-Ion or 6xAA Pack</text>
+  <text x="58" y="185" fill="#fbbf24" font-size="12">Use Main Toggle Switch on (+) Wire</text>
+  <!-- Terminals -->
+  <rect x="65" y="205" width="85" height="32" rx="5" fill="#dc2626"/>
+  <text x="107" y="226" fill="#ffffff" font-size="13" font-weight="bold" text-anchor="middle">BAT (+) 9-12V</text>
+  <rect x="175" y="205" width="85" height="32" rx="5" fill="#0f172a" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="217" y="226" fill="#e2e8f0" font-size="13" font-weight="bold" text-anchor="middle">BAT (-) GND</text>
+
+  <!-- ==================== 2. BUCK CONVERTER (LM2596) ==================== -->
+  <rect x="360" y="110" width="310" height="165" rx="10" fill="url(#buckGrad)" stroke="#60a5fa" stroke-width="2.5"/>
+  <rect x="360" y="110" width="310" height="34" rx="8" fill="#2563eb"/>
+  <text x="515" y="133" fill="#ffffff" font-size="15" font-weight="bold" text-anchor="middle">2. BUCK CONVERTER (LM2596)</text>
+  <text x="515" y="162" fill="#fde047" font-size="13" font-weight="bold" text-anchor="middle">TUNE POTENTIOMETER TO EXACTLY 5.0V</text>
+  <text x="515" y="182" fill="#bfdbfe" font-size="12" text-anchor="middle">Before connecting ESP32-CAM or Sensors!</text>
+  <!-- Input Pads -->
+  <rect x="378" y="198" width="90" height="28" rx="4" fill="#dc2626"/>
+  <text x="423" y="217" fill="#ffffff" font-size="12" font-weight="bold" text-anchor="middle">IN+ (7.4-12V)</text>
+  <rect x="378" y="234" width="90" height="28" rx="4" fill="#0f172a" stroke="#94a3b8"/>
+  <text x="423" y="253" fill="#e2e8f0" font-size="12" font-weight="bold" text-anchor="middle">IN- (GND)</text>
+  <!-- Output Pads -->
+  <rect x="560" y="198" width="92" height="28" rx="4" fill="#ef4444" stroke="#fde047" stroke-width="1.5"/>
+  <text x="606" y="217" fill="#ffffff" font-size="12" font-weight="bold" text-anchor="middle">OUT+ (5.0V)</text>
+  <rect x="560" y="234" width="92" height="28" rx="4" fill="#0f172a" stroke="#94a3b8"/>
+  <text x="606" y="253" fill="#e2e8f0" font-size="12" font-weight="bold" text-anchor="middle">OUT- (GND)</text>
+
+  <!-- ==================== 3. BREADBOARD-LESS 5V & GND HUB ==================== -->
+  <rect x="740" y="105" width="430" height="175" rx="10" fill="#1e293b" stroke="#22c55e" stroke-width="2.5" stroke-dasharray="6,3"/>
+  <rect x="740" y="105" width="430" height="34" rx="8" fill="#15803d"/>
+  <text x="955" y="127" fill="#ffffff" font-size="15" font-weight="bold" text-anchor="middle">3. NO-BREADBOARD POWER DISTRIBUTION BUS</text>
+  <text x="955" y="153" fill="#bbf7d0" font-size="12" text-anchor="middle">Twist/Splice wires or clamp in Screw Terminal Block (No Breadboard Needed!)</text>
+
+  <!-- 5V Rail Bar -->
+  <rect x="765" y="168" width="380" height="42" rx="6" fill="#7f1d1d" stroke="#ef4444" stroke-width="2"/>
+  <text x="778" y="194" fill="#fca5a5" font-size="12" font-weight="bold">+5.0V RAIL (Buck OUT+):</text>
+  <circle cx="985" cy="189" r="6" fill="#ef4444" stroke="#ffffff"/>
+  <circle cx="1020" cy="189" r="6" fill="#ef4444" stroke="#ffffff"/>
+  <circle cx="1055" cy="189" r="6" fill="#ef4444" stroke="#ffffff"/>
+  <circle cx="1090" cy="189" r="6" fill="#ef4444" stroke="#ffffff"/>
+  <circle cx="1125" cy="189" r="6" fill="#ef4444" stroke="#ffffff"/>
+
+  <!-- GND Rail Bar -->
+  <rect x="765" y="222" width="380" height="42" rx="6" fill="#090d16" stroke="#94a3b8" stroke-width="2"/>
+  <text x="778" y="248" fill="#cbd5e1" font-size="12" font-weight="bold">COMMON GND (All Tied):</text>
+  <circle cx="1000" cy="243" r="6" fill="#334155" stroke="#ffffff"/>
+  <circle cx="1032" cy="243" r="6" fill="#334155" stroke="#ffffff"/>
+  <circle cx="1064" cy="243" r="6" fill="#334155" stroke="#ffffff"/>
+  <circle cx="1096" cy="243" r="6" fill="#334155" stroke="#ffffff"/>
+  <circle cx="1128" cy="243" r="6" fill="#334155" stroke="#ffffff"/>
+
+  <!-- ==================== 4. L298N MOTOR DRIVER & 4WD MOTORS (LEFT) ==================== -->
+  <rect x="40" y="340" width="420" height="440" rx="12" fill="url(#l298Grad)" stroke="#f87171" stroke-width="2.5"/>
+  <rect x="40" y="340" width="420" height="38" rx="10" fill="#991b1b"/>
+  <text x="250" y="365" fill="#ffffff" font-size="16" font-weight="bold" text-anchor="middle">4. L298N DUAL H-BRIDGE MOTOR DRIVER</text>
+  <text x="250" y="395" fill="#fecaca" font-size="12" text-anchor="middle">Remove ENA &amp; ENB 5V Jumpers for PWM Speed Control</text>
+
+  <!-- Left Motors Box -->
+  <rect x="60" y="420" width="145" height="125" rx="8" fill="#1e293b" stroke="#fbbf24" stroke-width="2"/>
+  <text x="132" y="444" fill="#fbbf24" font-size="13" font-weight="bold" text-anchor="middle">LEFT 2 MOTORS</text>
+  <text x="132" y="464" fill="#e2e8f0" font-size="11" text-anchor="middle">Front-Left + Rear-Left</text>
+  <text x="132" y="480" fill="#94a3b8" font-size="11" text-anchor="middle">(Wired in Parallel)</text>
+  <rect x="75" y="492" width="115" height="20" rx="4" fill="#334155"/>
+  <text x="132" y="506" fill="#38bdf8" font-size="11" font-weight="bold" text-anchor="middle">OUT1 (+) &amp; OUT2 (-)</text>
+  <text x="132" y="534" fill="#cbd5e1" font-size="10" text-anchor="middle">Swap if spinning backward</text>
+
+  <!-- Right Motors Box -->
+  <rect x="60" y="570" width="145" height="125" rx="8" fill="#1e293b" stroke="#fbbf24" stroke-width="2"/>
+  <text x="132" y="594" fill="#fbbf24" font-size="13" font-weight="bold" text-anchor="middle">RIGHT 2 MOTORS</text>
+  <text x="132" y="614" fill="#e2e8f0" font-size="11" text-anchor="middle">Front-Right + Rear-Right</text>
+  <text x="132" y="630" fill="#94a3b8" font-size="11" text-anchor="middle">(Wired in Parallel)</text>
+  <rect x="75" y="642" width="115" height="20" rx="4" fill="#334155"/>
+  <text x="132" y="656" fill="#38bdf8" font-size="11" font-weight="bold" text-anchor="middle">OUT3 (+) &amp; OUT4 (-)</text>
+  <text x="132" y="684" fill="#cbd5e1" font-size="10" text-anchor="middle">Swap if spinning backward</text>
+
+  <!-- L298N Power Screw Terminals -->
+  <rect x="60" y="715" width="190" height="48" rx="6" fill="#0f172a" stroke="#f87171" stroke-width="1.5"/>
+  <text x="155" y="734" fill="#fca5a5" font-size="12" font-weight="bold" text-anchor="middle">L298N SCREW TERMINALS</text>
+  <text x="155" y="753" fill="#e2e8f0" font-size="11" text-anchor="middle">+12V (Bat+)  |  GND  |  +5V</text>
+
+  <!-- L298N Control Header Pins (Right side of L298N) -->
+  <rect x="275" y="420" width="170" height="340" rx="8" fill="#0f172a" stroke="#fca5a5" stroke-width="1.5"/>
+  <text x="360" y="445" fill="#fca5a5" font-size="13" font-weight="bold" text-anchor="middle">CONTROL PINS</text>
+
+  <rect x="290" y="465" width="140" height="32" rx="5" fill="#1e293b" stroke="#a855f7"/>
+  <text x="360" y="486" fill="#e9d5ff" font-size="13" font-weight="bold" text-anchor="middle">ENA (PWM)  →  D5</text>
+
+  <rect x="290" y="510" width="140" height="32" rx="5" fill="#1e293b" stroke="#38bdf8"/>
+  <text x="360" y="531" fill="#bae6fd" font-size="13" font-weight="bold" text-anchor="middle">IN1 (Left Fwd) → D2</text>
+
+  <rect x="290" y="555" width="140" height="32" rx="5" fill="#1e293b" stroke="#38bdf8"/>
+  <text x="360" y="576" fill="#bae6fd" font-size="13" font-weight="bold" text-anchor="middle">IN2 (Left Rev) → D3</text>
+
+  <rect x="290" y="600" width="140" height="32" rx="5" fill="#1e293b" stroke="#38bdf8"/>
+  <text x="360" y="621" fill="#bae6fd" font-size="13" font-weight="bold" text-anchor="middle">IN3 (Right Fwd) → D4</text>
+
+  <rect x="290" y="645" width="140" height="32" rx="5" fill="#1e293b" stroke="#38bdf8"/>
+  <text x="360" y="666" fill="#bae6fd" font-size="13" font-weight="bold" text-anchor="middle">IN4 (Right Rev) → D7</text>
+
+  <rect x="290" y="690" width="140" height="32" rx="5" fill="#1e293b" stroke="#a855f7"/>
+  <text x="360" y="711" fill="#e9d5ff" font-size="13" font-weight="bold" text-anchor="middle">ENB (PWM)  →  D6</text>
+
+  <!-- ==================== 5. ARDUINO UNO R3 (CENTER) ==================== -->
+  <rect x="540" y="340" width="460" height="530" rx="14" fill="url(#arduinoGrad)" stroke="#7dd3fc" stroke-width="3"/>
+  <rect x="540" y="340" width="460" height="42" rx="12" fill="#0c4a6e"/>
+  <text x="770" y="367" fill="#ffffff" font-size="18" font-weight="bold" text-anchor="middle">5. ARDUINO UNO R3 (MAIN CONTROLLER)</text>
+  <text x="770" y="402" fill="#bae6fd" font-size="11" text-anchor="middle">Timer1 used by Servo.h → Motor PWM kept on Timer0 (D5 &amp; D6) so PWM never conflicts!</text>
+
+  <!-- Digital Pins Column (Left inside Arduino) -->
+  <rect x="560" y="420" width="205" height="430" rx="8" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5"/>
+  <text x="662" y="445" fill="#38bdf8" font-size="14" font-weight="bold" text-anchor="middle">DIGITAL HEADER (D2–D10)</text>
+
+  <text x="575" y="482" fill="#bae6fd" font-size="13" font-weight="bold">D2  ←  L298N IN1 (Left Fwd)</text>
+  <text x="575" y="517" fill="#bae6fd" font-size="13" font-weight="bold">D3  ←  L298N IN2 (Left Rev)</text>
+  <text x="575" y="552" fill="#bae6fd" font-size="13" font-weight="bold">D4  ←  L298N IN3 (Right Fwd)</text>
+  <text x="575" y="587" fill="#e9d5ff" font-size="13" font-weight="bold">D5 (PWM) ← L298N ENA</text>
+  <text x="575" y="622" fill="#e9d5ff" font-size="13" font-weight="bold">D6 (PWM) ← L298N ENB</text>
+  <text x="575" y="657" fill="#bae6fd" font-size="13" font-weight="bold">D7  ←  L298N IN4 (Right Rev)</text>
+  <line x1="572" y1="676" x2="752" y2="676" stroke="#334155" stroke-width="1.5"/>
+  <text x="575" y="704" fill="#6ee7b7" font-size="13" font-weight="bold">D8  →  HC-SR04 TRIG</text>
+  <text x="575" y="739" fill="#6ee7b7" font-size="13" font-weight="bold">D9  ←  HC-SR04 ECHO</text>
+  <line x1="572" y1="758" x2="752" y2="758" stroke="#334155" stroke-width="1.5"/>
+  <text x="575" y="786" fill="#fde047" font-size="12" font-weight="bold">D10 (PWM) → 230° SERVO</text>
+  <text x="575" y="818" fill="#94a3b8" font-size="11">D0/D1 kept FREE for USB</text>
+  <text x="575" y="835" fill="#94a3b8" font-size="11">code upload &amp; Serial Monitor!</text>
+
+  <!-- Power & Analog Pins Column (Right inside Arduino) -->
+  <rect x="780" y="420" width="200" height="430" rx="8" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5"/>
+  <text x="880" y="445" fill="#f87171" font-size="14" font-weight="bold" text-anchor="middle">POWER &amp; ANALOG PINS</text>
+
+  <rect x="795" y="462" width="170" height="65" rx="6" fill="#1e293b" stroke="#ef4444"/>
+  <text x="880" y="484" fill="#fca5a5" font-size="13" font-weight="bold" text-anchor="middle">5V Pin ← Buck 5.0V</text>
+  <text x="880" y="504" fill="#cbd5e1" font-size="11" text-anchor="middle">(Or VIN ← Battery 7.4-12V)</text>
+  <text x="880" y="520" fill="#94a3b8" font-size="11" text-anchor="middle">GND Pin ← Common GND</text>
+
+  <text x="880" y="558" fill="#fbbf24" font-size="14" font-weight="bold" text-anchor="middle">ANALOG / DIGITAL IO</text>
+  <rect x="795" y="572" width="170" height="36" rx="5" fill="#1e293b" stroke="#34d399"/>
+  <text x="880" y="595" fill="#6ee7b7" font-size="13" font-weight="bold" text-anchor="middle">A0 ← LEFT IR OUT</text>
+
+  <rect x="795" y="618" width="170" height="36" rx="5" fill="#1e293b" stroke="#34d399"/>
+  <text x="880" y="641" fill="#6ee7b7" font-size="13" font-weight="bold" text-anchor="middle">A1 ← RIGHT IR OUT</text>
+
+  <rect x="795" y="675" width="170" height="48" rx="5" fill="#1e293b" stroke="#f59e0b"/>
+  <text x="880" y="696" fill="#fde047" font-size="13" font-weight="bold" text-anchor="middle">A2 (SoftRX) ← ESP32 TX</text>
+  <text x="880" y="714" fill="#cbd5e1" font-size="11" text-anchor="middle">Direct Wire (3.3V→5V Safe!)</text>
+
+  <rect x="795" y="733" width="170" height="48" rx="5" fill="#1e293b" stroke="#94a3b8"/>
+  <text x="880" y="754" fill="#e2e8f0" font-size="12" font-weight="bold" text-anchor="middle">A3 (SoftTX) → ESP32 RX</text>
+  <text x="880" y="772" fill="#94a3b8" font-size="10" text-anchor="middle">(Optional telemetry via divider)</text>
+
+  <rect x="795" y="792" width="170" height="46" rx="5" fill="#172554" stroke="#60a5fa"/>
+  <text x="880" y="811" fill="#93c5fd" font-size="11" font-weight="bold" text-anchor="middle">BONUS PINS ON UNO:</text>
+  <text x="880" y="828" fill="#dbeafe" font-size="10" text-anchor="middle">ICSP Header has +5V &amp; GND!</text>
+
+  <!-- ==================== 6. PHASE 1 SENSORS: ULTRASONIC + 230° SERVO (RIGHT TOP) ==================== -->
+  <rect x="1080" y="310" width="480" height="165" rx="10" fill="url(#sensorGrad)" stroke="#34d399" stroke-width="2.5"/>
+  <rect x="1080" y="310" width="480" height="34" rx="8" fill="#065f46"/>
+  <text x="1320" y="333" fill="#ffffff" font-size="15" font-weight="bold" text-anchor="middle">6. PHASE 1: HC-SR04 ULTRASONIC + 230° SERVO</text>
+
+  <!-- HC-SR04 -->
+  <rect x="1098" y="355" width="215" height="105" rx="6" fill="#0f172a" stroke="#6ee7b7"/>
+  <text x="1205" y="376" fill="#6ee7b7" font-size="13" font-weight="bold" text-anchor="middle">HC-SR04 ULTRASONIC</text>
+  <text x="1112" y="398" fill="#fca5a5" font-size="12">• VCC   → +5.0V Rail (or Uno 5V)</text>
+  <text x="1112" y="416" fill="#6ee7b7" font-size="12">• TRIG  → Arduino Pin D8</text>
+  <text x="1112" y="434" fill="#6ee7b7" font-size="12">• ECHO  → Arduino Pin D9</text>
+  <text x="1112" y="452" fill="#cbd5e1" font-size="12">• GND   → Common GND</text>
+
+  <!-- 230 deg Servo -->
+  <rect x="1328" y="355" width="215" height="105" rx="6" fill="#0f172a" stroke="#fde047"/>
+  <text x="1435" y="376" fill="#fde047" font-size="13" font-weight="bold" text-anchor="middle">230° ROTATION SERVO</text>
+  <text x="1342" y="398" fill="#fca5a5" font-size="12">• RED (VCC) → Buck +5.0V Rail</text>
+  <text x="1342" y="416" fill="#fde047" font-size="12">• ORG/YLW   → Arduino Pin D10</text>
+  <text x="1342" y="434" fill="#cbd5e1" font-size="12">• BRN/BLK   → Common GND</text>
+  <text x="1342" y="452" fill="#93c5fd" font-size="11">Center = 115° (1500 µs pulse)</text>
+
+  <!-- ==================== 7. PHASE 2 SENSORS: 2x IR SENSORS (RIGHT MIDDLE) ==================== -->
+  <rect x="1080" y="495" width="480" height="150" rx="10" fill="url(#sensorGrad)" stroke="#34d399" stroke-width="2.5"/>
+  <rect x="1080" y="495" width="480" height="34" rx="8" fill="#065f46"/>
+  <text x="1320" y="518" fill="#ffffff" font-size="15" font-weight="bold" text-anchor="middle">7. PHASE 2: 2x IR SENSORS (FRONT-LEFT &amp; FRONT-RIGHT)</text>
+
+  <rect x="1098" y="540" width="215" height="92" rx="6" fill="#0f172a" stroke="#6ee7b7"/>
+  <text x="1205" y="561" fill="#6ee7b7" font-size="13" font-weight="bold" text-anchor="middle">LEFT IR MODULE</text>
+  <text x="1112" y="582" fill="#fca5a5" font-size="12">• VCC → +5.0V Rail</text>
+  <text x="1112" y="600" fill="#cbd5e1" font-size="12">• GND → Common GND</text>
+  <text x="1112" y="618" fill="#fde047" font-size="12" font-weight="bold">• OUT → Arduino Pin A0</text>
+
+  <rect x="1328" y="540" width="215" height="92" rx="6" fill="#0f172a" stroke="#6ee7b7"/>
+  <text x="1435" y="561" fill="#6ee7b7" font-size="13" font-weight="bold" text-anchor="middle">RIGHT IR MODULE</text>
+  <text x="1342" y="582" fill="#fca5a5" font-size="12">• VCC → +5.0V Rail</text>
+  <text x="1342" y="600" fill="#cbd5e1" font-size="12">• GND → Common GND</text>
+  <text x="1342" y="618" fill="#fde047" font-size="12" font-weight="bold">• OUT → Arduino Pin A1</text>
+
+  <!-- ==================== 8. PHASE 3: ESP32-CAM MODULE (RIGHT BOTTOM) ==================== -->
+  <rect x="1080" y="665" width="480" height="205" rx="10" fill="url(#espGrad)" stroke="#f59e0b" stroke-width="2.5"/>
+  <rect x="1080" y="665" width="480" height="34" rx="8" fill="#d97706"/>
+  <text x="1320" y="688" fill="#0f172a" font-size="15" font-weight="bold" text-anchor="middle">8. PHASE 3: ESP32-CAM (OV2640 + WI-FI + ML BRIDGE)</text>
+
+  <rect x="1098" y="710" width="445" height="145" rx="6" fill="#0f172a" stroke="#fbbf24"/>
+  <text x="1110" y="735" fill="#fca5a5" font-size="11.5" font-weight="bold">• 5V Pin         ← Buck Converter +5.0V Rail (Needs stable 5V/2A!)</text>
+  <text x="1110" y="758" fill="#cbd5e1" font-size="11.5" font-weight="bold">• GND Pin        ← Common GND Rail</text>
+  <text x="1110" y="781" fill="#fde047" font-size="11.5" font-weight="bold">• U0T (GPIO1 TX) → Arduino Pin A2 (SoftSerial RX) [1 Direct Wire]</text>
+  <text x="1110" y="804" fill="#93c5fd" font-size="11">• U0R (GPIO3 RX) ← Optional: Uno A3 via 1kΩ/2kΩ divider (telemetry)</text>
+  <text x="1110" y="826" fill="#a7f3d0" font-size="11">• Streams MJPEG Video over Wi-Fi → Python ML → Sends F/L/R/B/S to Uno</text>
+  <text x="1110" y="845" fill="#94a3b8" font-size="10.5">• Flash note: Jumper IO0-to-GND while uploading code, then remove IO0 jumper.</text>
+
+  <!-- ==================== WIRING LINES BETWEEN BLOCKS ==================== -->
+  <!-- Battery (+) to Buck IN+ and L298N +12V -->
+  <path d="M 107 237 L 107 295 L 423 295 L 423 226" fill="none" stroke="#ef4444" stroke-width="3.5"/>
+  <path d="M 107 295 L 25 295 L 25 740 L 60 740" fill="none" stroke="#ef4444" stroke-width="3.5"/>
+
+  <!-- Battery (-) to Buck IN- and L298N GND -->
+  <path d="M 217 237 L 217 310 L 445 310 L 445 262" fill="none" stroke="#94a3b8" stroke-width="3.5"/>
+  <path d="M 217 310 L 15 310 L 15 752 L 60 752" fill="none" stroke="#94a3b8" stroke-width="3.5"/>
+
+  <!-- Buck OUT+ to 5V Rail -->
+  <path d="M 652 212 L 765 189" fill="none" stroke="#ef4444" stroke-width="4"/>
+  <!-- Buck OUT- to Common GND Rail -->
+  <path d="M 652 248 L 765 243" fill="none" stroke="#94a3b8" stroke-width="4"/>
+
+  <!-- L298N Control Wires to Arduino D2-D7 -->
+  <path d="M 430 481 L 505 481 L 505 582 L 560 582" fill="none" stroke="#a855f7" stroke-width="2.5"/>
+  <path d="M 430 526 L 485 526 L 485 478 L 560 478" fill="none" stroke="#38bdf8" stroke-width="2.5"/>
+  <path d="M 430 571 L 495 571 L 495 512 L 560 512" fill="none" stroke="#38bdf8" stroke-width="2.5"/>
+  <path d="M 430 616 L 515 616 L 515 547 L 560 547" fill="none" stroke="#38bdf8" stroke-width="2.5"/>
+  <path d="M 430 661 L 525 661 L 525 652 L 560 652" fill="none" stroke="#38bdf8" stroke-width="2.5"/>
+  <path d="M 430 706 L 532 706 L 532 617 L 560 617" fill="none" stroke="#a855f7" stroke-width="2.5"/>
+
+  <!-- Sensors to Arduino -->
+  <path d="M 1000 410 L 1080 410" fill="none" stroke="#34d399" stroke-width="3" stroke-dasharray="5,3"/>
+  <path d="M 1000 595 L 1080 595" fill="none" stroke="#34d399" stroke-width="3" stroke-dasharray="5,3"/>
+  <path d="M 1000 715 L 1080 715" fill="none" stroke="#f59e0b" stroke-width="3"/>
+
+  <!-- ==================== 9. BOTTOM GUIDE: HOW TO WIRE WITHOUT A BREADBOARD ==================== -->
+  <rect x="40" y="895" width="1520" height="205" rx="12" fill="#0f172a" stroke="#38bdf8" stroke-width="2.5"/>
+  <rect x="40" y="895" width="1520" height="36" rx="10" fill="#0284c7"/>
+  <text x="800" y="919" fill="#ffffff" font-size="16" font-weight="bold" text-anchor="middle">HOW TO CONNECT EVERYTHING CLEANLY WITHOUT A BREADBOARD (3 PROVEN METHODS)</text>
+
+  <!-- Method A -->
+  <rect x="60" y="945" width="475" height="140" rx="8" fill="#1e293b" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="297" y="968" fill="#4ade80" font-size="14" font-weight="bold" text-anchor="middle">METHOD A: USE SCREW TERMINALS + UNO ICSP PINS</text>
+  <text x="75" y="992" fill="#e2e8f0" font-size="12">1. L298N has screw terminals for +12V, GND, and +5V. Each screw</text>
+  <text x="75" y="1010" fill="#e2e8f0" font-size="12">   terminal easily clamps 3–4 stripped jumper wire ends together!</text>
+  <text x="75" y="1030" fill="#e2e8f0" font-size="12">2. Arduino Uno has 3x GND pins on standard headers PLUS 1x 5V</text>
+  <text x="75" y="1048" fill="#e2e8f0" font-size="12">   and 1x GND male pin on the 6-pin ICSP header (near reset button).</text>
+  <text x="75" y="1068" fill="#fde047" font-size="12" font-weight="bold">→ Zero soldering &amp; zero breadboard required for Phase 1 &amp; 2!</text>
+
+  <!-- Method B -->
+  <rect x="562" y="945" width="475" height="140" rx="8" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="800" y="968" fill="#fbbf24" font-size="14" font-weight="bold" text-anchor="middle">METHOD B: MAKE A 5V &amp; GND Y-SPLICE HARNESS</text>
+  <text x="577" y="992" fill="#e2e8f0" font-size="12">1. Take 6 Red (5V) jumper wires: cut one end off each, strip 1 cm</text>
+  <text x="577" y="1010" fill="#e2e8f0" font-size="12">   of insulation, twist all 6 copper cores together tightly, and</text>
+  <text x="577" y="1028" fill="#e2e8f0" font-size="12">   wrap with electrical tape (or clamp into Buck OUT+).</text>
+  <text x="577" y="1048" fill="#e2e8f0" font-size="12">2. Repeat with 6 Black (GND) wires tied to Buck OUT- &amp; Uno GND.</text>
+  <text x="577" y="1068" fill="#fde047" font-size="12" font-weight="bold">→ Vibration-proof! Never shakes loose on a moving 4WD chassis.</text>
+
+  <!-- Method C -->
+  <rect x="1065" y="945" width="475" height="140" rx="8" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5"/>
+  <text x="1302" y="968" fill="#38bdf8" font-size="14" font-weight="bold" text-anchor="middle">METHOD C: DIRECT SIGNAL JUMPERS (FEMALE-TO-MALE)</text>
+  <text x="1080" y="992" fill="#e2e8f0" font-size="12">• All signal pins (IN1-IN4, ENA/B, TRIG, ECHO, SERVO, IR_L, IR_R,</text>
+  <text x="1080" y="1010" fill="#e2e8f0" font-size="12">  ESP32 U0T) are 1-to-1 connections!</text>
+  <text x="1080" y="1030" fill="#e2e8f0" font-size="12">• Plug Female end directly onto the sensor/module male header pin,</text>
+  <text x="1080" y="1048" fill="#e2e8f0" font-size="12">  and plug the Male end directly into the Arduino Uno female socket.</text>
+  <text x="1080" y="1068" fill="#fde047" font-size="12" font-weight="bold">→ Every signal pin has its own dedicated Arduino Uno header slot!</text>
+</svg>

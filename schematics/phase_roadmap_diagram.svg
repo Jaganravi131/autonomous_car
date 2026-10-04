@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="960" viewBox="0 0 1600 960" font-family="DejaVu Sans, Arial, Helvetica, sans-serif">
+  <rect width="1600" height="960" fill="#0f172a"/>
+
+  <!-- Header -->
+  <rect x="20" y="16" width="1560" height="64" rx="10" fill="#1e293b" stroke="#38bdf8" stroke-width="2"/>
+  <text x="800" y="44" fill="#f8fafc" font-size="23" font-weight="bold" text-anchor="middle">PHASED BUILD ROADMAP &amp; MACHINE LEARNING SYSTEM ARCHITECTURE</text>
+  <text x="800" y="66" fill="#94a3b8" font-size="14" text-anchor="middle">Step-by-Step Verification: Pass Each Phase Gate Before Adding Next Hardware Layer</text>
+
+  <!-- ==================== PHASE 0 ==================== -->
+  <rect x="30" y="100" width="350" height="390" rx="12" fill="#1e293b" stroke="#f59e0b" stroke-width="2.5"/>
+  <rect x="30" y="100" width="350" height="40" rx="10" fill="#d97706"/>
+  <text x="205" y="126" fill="#0f172a" font-size="16" font-weight="bold" text-anchor="middle">STAGE 0: POWER &amp; CHASSIS PREP</text>
+  <text x="50" y="165" fill="#fde047" font-size="14" font-weight="bold">1. Tune Buck Converter FIRST:</text>
+  <text x="50" y="187" fill="#e2e8f0" font-size="12">• Connect Battery (7.4-12V) to Buck IN+/IN-</text>
+  <text x="50" y="206" fill="#e2e8f0" font-size="12">• Turn brass screw until OUT+ = 5.0V DC</text>
+  <text x="50" y="236" fill="#fde047" font-size="14" font-weight="bold">2. Wire 4WD Motors to L298N:</text>
+  <text x="50" y="258" fill="#e2e8f0" font-size="12">• Left 2 motors → OUT1 &amp; OUT2</text>
+  <text x="50" y="277" fill="#e2e8f0" font-size="12">• Right 2 motors → OUT3 &amp; OUT4</text>
+  <text x="50" y="296" fill="#e2e8f0" font-size="12">• Remove ENA &amp; ENB jumpers</text>
+  <text x="50" y="326" fill="#fde047" font-size="14" font-weight="bold">3. Center 230° Servo:</text>
+  <text x="50" y="348" fill="#e2e8f0" font-size="12">• Code sends 1500µs pulse (115° center)</text>
+  <text x="50" y="367" fill="#e2e8f0" font-size="12">• Mount HC-SR04 facing dead-ahead</text>
+  <rect x="50" y="395" width="310" height="75" rx="8" fill="#0f172a" stroke="#f59e0b"/>
+  <text x="205" y="418" fill="#fbbf24" font-size="13" font-weight="bold" text-anchor="middle">STAGE 0 PASS CHECK:</text>
+  <text x="205" y="438" fill="#cbd5e1" font-size="12" text-anchor="middle">✔ Buck outputs steady 5.0V</text>
+  <text x="205" y="456" fill="#cbd5e1" font-size="12" text-anchor="middle">✔ All Common GND wires tied together</text>
+
+  <!-- ==================== PHASE 1 ==================== -->
+  <rect x="415" y="100" width="365" height="390" rx="12" fill="#1e293b" stroke="#38bdf8" stroke-width="2.5"/>
+  <rect x="415" y="100" width="365" height="40" rx="10" fill="#0284c7"/>
+  <text x="597" y="126" fill="#ffffff" font-size="16" font-weight="bold" text-anchor="middle">PHASE 1: ULTRASONIC + 230° SERVO</text>
+  <text x="435" y="165" fill="#7dd3fc" font-size="13" font-weight="bold">File: phase1_ultrasonic/phase1_ultrasonic.ino</text>
+  <text x="435" y="192" fill="#e2e8f0" font-size="12">• Uses Arduino Uno + L298N + HC-SR04 + Servo</text>
+  <text x="435" y="212" fill="#e2e8f0" font-size="12">• Boot Self-Test sweeps 230° servo (30°..115°..200°)</text>
+  <text x="435" y="232" fill="#e2e8f0" font-size="12">• Continuously pings front distance (cm)</text>
+  <text x="435" y="252" fill="#e2e8f0" font-size="12">• If obstacle &lt; 28 cm: stops, backs up slightly,</text>
+  <text x="435" y="272" fill="#e2e8f0" font-size="12">  scans 5 angles across 230° arc, and turns</text>
+  <text x="435" y="292" fill="#e2e8f0" font-size="12">  toward the widest open corridor</text>
+  <text x="435" y="318" fill="#fde047" font-size="11.5" font-weight="bold">Pins: D2-D7 (Motors), D8/D9 (US), D10 (Servo)</text>
+  <rect x="435" y="350" width="325" height="120" rx="8" fill="#0f172a" stroke="#38bdf8"/>
+  <text x="597" y="373" fill="#38bdf8" font-size="13" font-weight="bold" text-anchor="middle">PHASE 1 TEST GATE:</text>
+  <text x="450" y="395" fill="#cbd5e1" font-size="12">✔ Serial Monitor prints accurate cm distance</text>
+  <text x="450" y="415" fill="#cbd5e1" font-size="12">✔ All 4 wheels drive forward straight</text>
+  <text x="450" y="435" fill="#cbd5e1" font-size="12">✔ Servo looks Left/Right &amp; avoids walls</text>
+  <text x="450" y="455" fill="#4ade80" font-size="12" font-weight="bold">→ IF PASSED, PROCEED TO PHASE 2!</text>
+
+  <!-- ==================== PHASE 2 ==================== -->
+  <rect x="815" y="100" width="365" height="390" rx="12" fill="#1e293b" stroke="#22c55e" stroke-width="2.5"/>
+  <rect x="815" y="100" width="365" height="40" rx="10" fill="#15803d"/>
+  <text x="997" y="126" fill="#ffffff" font-size="16" font-weight="bold" text-anchor="middle">PHASE 2: + 2x IR SENSOR FUSION</text>
+  <text x="835" y="165" fill="#86efac" font-size="11.5" font-weight="bold">File: phase2_ultrasonic_ir/phase2_ultrasonic_ir.ino</text>
+  <text x="835" y="192" fill="#e2e8f0" font-size="12">• Keep ALL Phase 1 wires untouched!</text>
+  <text x="835" y="212" fill="#e2e8f0" font-size="12">• Add Left IR → A0, Right IR → A1</text>
+  <text x="835" y="232" fill="#e2e8f0" font-size="12">• Mode 1 (Default): Corner Blind-Spot Reflex</text>
+  <text x="835" y="252" fill="#e2e8f0" font-size="12">  - Left IR triggered → instant dodge Right</text>
+  <text x="835" y="272" fill="#e2e8f0" font-size="12">  - Right IR triggered → instant dodge Left</text>
+  <text x="835" y="292" fill="#e2e8f0" font-size="12">• Mode 2 (Optional): Line Follower + US Stop</text>
+  <text x="835" y="318" fill="#fde047" font-size="12" font-weight="bold">Added Pins: A0 (Left IR), A1 (Right IR)</text>
+  <rect x="835" y="350" width="325" height="120" rx="8" fill="#0f172a" stroke="#22c55e"/>
+  <text x="997" y="373" fill="#4ade80" font-size="13" font-weight="bold" text-anchor="middle">PHASE 2 TEST GATE:</text>
+  <text x="850" y="395" fill="#cbd5e1" font-size="12">✔ Tune blue IR pots so LED lights at ~12cm</text>
+  <text x="850" y="415" fill="#cbd5e1" font-size="12">✔ Hand near Left IR → Car dodges Right</text>
+  <text x="850" y="435" fill="#cbd5e1" font-size="12">✔ Hand near Right IR → Car dodges Left</text>
+  <text x="850" y="455" fill="#4ade80" font-size="12" font-weight="bold">→ IF PASSED, PROCEED TO PHASE 3!</text>
+
+  <!-- ==================== PHASE 3 ==================== -->
+  <rect x="1215" y="100" width="355" height="390" rx="12" fill="#1e293b" stroke="#a855f7" stroke-width="2.5"/>
+  <rect x="1215" y="100" width="355" height="40" rx="10" fill="#7e22ce"/>
+  <text x="1392" y="126" fill="#ffffff" font-size="16" font-weight="bold" text-anchor="middle">PHASE 3: ESP32-CAM + ML PILOT</text>
+  <text x="1235" y="165" fill="#d8b4fe" font-size="13" font-weight="bold">Folder: phase3_esp32cam_ml/</text>
+  <text x="1235" y="192" fill="#e2e8f0" font-size="12">• Connect ESP32-CAM 5V/GND to Buck 5.0V</text>
+  <text x="1235" y="212" fill="#e2e8f0" font-size="12">• Connect ESP32 U0T (TX) → Arduino A2</text>
+  <text x="1235" y="232" fill="#e2e8f0" font-size="12">• Flash esp32cam_firmware.ino &amp; Uno sketch</text>
+  <text x="1235" y="252" fill="#e2e8f0" font-size="12">• Step 3A: Test Web Dashboard in Browser</text>
+  <text x="1235" y="272" fill="#e2e8f0" font-size="12">• Step 3B: Run 1_collect_data.py (Drive &amp; Save)</text>
+  <text x="1235" y="292" fill="#e2e8f0" font-size="12">• Step 3C: Run 2_train_model.py (Train CNN)</text>
+  <text x="1235" y="312" fill="#e2e8f0" font-size="12">• Step 3D: Run 3_run_autonomous_ml.py</text>
+  <rect x="1235" y="350" width="315" height="120" rx="8" fill="#0f172a" stroke="#a855f7"/>
+  <text x="1392" y="373" fill="#c084fc" font-size="13" font-weight="bold" text-anchor="middle">PHASE 3 SAFETY ARCHITECTURE:</text>
+  <text x="1250" y="395" fill="#cbd5e1" font-size="12">✔ ML predicts steering from camera stream</text>
+  <text x="1250" y="415" fill="#cbd5e1" font-size="12">✔ Arduino Uno still checks Ultrasonic + IR</text>
+  <text x="1250" y="435" fill="#cbd5e1" font-size="12">  every 25ms for collision override!</text>
+  <text x="1250" y="455" fill="#4ade80" font-size="12" font-weight="bold">→ FULL SELF-DRIVING CAR COMPLETE!</text>
+
+  <!-- ==================== BOTTOM: MACHINE LEARNING PIPELINE ARCHITECTURE ==================== -->
+  <rect x="30" y="520" width="1540" height="415" rx="12" fill="#1e293b" stroke="#60a5fa" stroke-width="2.5"/>
+  <rect x="30" y="520" width="1540" height="40" rx="10" fill="#1d4ed8"/>
+  <text x="800" y="546" fill="#ffffff" font-size="17" font-weight="bold" text-anchor="middle">HOW THE CAMERA + MACHINE LEARNING CLOSED-LOOP CONTROL WORKS (PHASE 3)</text>
+
+  <!-- Box 1: ESP32-CAM -->
+  <rect x="60" y="590" width="310" height="200" rx="10" fill="#0f172a" stroke="#f59e0b" stroke-width="2"/>
+  <text x="215" y="620" fill="#fbbf24" font-size="15" font-weight="bold" text-anchor="middle">1. ESP32-CAM (ON CAR)</text>
+  <text x="80" y="650" fill="#e2e8f0" font-size="12">• Captures 320x240 OV2640 frames</text>
+  <text x="80" y="672" fill="#e2e8f0" font-size="12">• Streams MJPEG at :81/stream</text>
+  <text x="80" y="694" fill="#e2e8f0" font-size="12">• Receives HTTP /cmd?dir=F&amp;spd=170</text>
+  <text x="80" y="716" fill="#e2e8f0" font-size="12">  or differential /cmd?L=180&amp;R=120</text>
+  <text x="80" y="738" fill="#fde047" font-size="12" font-weight="bold">• Forwards UART command at 115200</text>
+  <text x="80" y="758" fill="#fde047" font-size="12" font-weight="bold">  baud via U0T → Arduino Uno A2</text>
+
+  <!-- Arrow 1 -->
+  <path d="M 370 650 L 445 650" fill="none" stroke="#38bdf8" stroke-width="4"/>
+  <text x="407" y="638" fill="#38bdf8" font-size="11" font-weight="bold" text-anchor="middle">Wi-Fi Video</text>
+  <path d="M 445 730 L 370 730" fill="none" stroke="#4ade80" stroke-width="4"/>
+  <text x="407" y="750" fill="#4ade80" font-size="11" font-weight="bold" text-anchor="middle">HTTP /cmd</text>
+
+  <!-- Box 2: Data Collection -->
+  <rect x="450" y="590" width="330" height="200" rx="10" fill="#0f172a" stroke="#38bdf8" stroke-width="2"/>
+  <text x="615" y="620" fill="#38bdf8" font-size="15" font-weight="bold" text-anchor="middle">2. DATA COLLECTION (PYTHON)</text>
+  <text x="470" y="645" fill="#93c5fd" font-size="12" font-weight="bold">1_collect_data.py</text>
+  <text x="470" y="670" fill="#e2e8f0" font-size="12">• Drive manually with W / A / S / D keys</text>
+  <text x="470" y="692" fill="#e2e8f0" font-size="12">• Every frame is paired with your key:</text>
+  <text x="470" y="714" fill="#6ee7b7" font-size="12">  dataset/F/ (Forward), dataset/L/ (Left),</text>
+  <text x="470" y="734" fill="#6ee7b7" font-size="12">  dataset/R/ (Right), dataset/S/ (Stop)</text>
+  <text x="470" y="758" fill="#cbd5e1" font-size="12">• Logs timestamps &amp; labels to CSV</text>
+
+  <!-- Arrow 2 -->
+  <path d="M 780 690 L 840 690" fill="none" stroke="#a855f7" stroke-width="4"/>
+  <text x="810" y="678" fill="#d8b4fe" font-size="11" font-weight="bold" text-anchor="middle">Dataset</text>
+
+  <!-- Box 3: CNN Model Training -->
+  <rect x="845" y="590" width="330" height="200" rx="10" fill="#0f172a" stroke="#a855f7" stroke-width="2"/>
+  <text x="1010" y="620" fill="#c084fc" font-size="15" font-weight="bold" text-anchor="middle">3. CNN TRAINING (BEHAVIORAL)</text>
+  <text x="865" y="645" fill="#d8b4fe" font-size="12" font-weight="bold">2_train_model.py</text>
+  <text x="865" y="670" fill="#e2e8f0" font-size="12">• Crops top sky/ceiling, keeps road ROI</text>
+  <text x="865" y="692" fill="#e2e8f0" font-size="12">• Augments data: horizontal flip auto-swaps</text>
+  <text x="865" y="712" fill="#e2e8f0" font-size="12">  Left ↔ Right labels (doubles dataset!)</text>
+  <text x="865" y="734" fill="#e2e8f0" font-size="12">• Trains PilotNet CNN (Conv2D × 4 + Dense)</text>
+  <text x="865" y="758" fill="#fde047" font-size="12" font-weight="bold">• Saves .keras, .tflite &amp; .pkl models</text>
+
+  <!-- Arrow 3 -->
+  <path d="M 1175 690 L 1230 690" fill="none" stroke="#22c55e" stroke-width="4"/>
+  <text x="1205" y="678" fill="#4ade80" font-size="10" font-weight="bold" text-anchor="middle">CNN Model</text>
+
+  <!-- Box 4: Real-Time Autonomous Pilot -->
+  <rect x="1235" y="590" width="305" height="200" rx="10" fill="#0f172a" stroke="#22c55e" stroke-width="2"/>
+  <text x="1387" y="620" fill="#4ade80" font-size="15" font-weight="bold" text-anchor="middle">4. LIVE ML AUTOPILOT</text>
+  <text x="1255" y="645" fill="#86efac" font-size="12" font-weight="bold">3_run_autonomous_ml.py</text>
+  <text x="1255" y="670" fill="#e2e8f0" font-size="12">• Mode 1: Trained ML Model Inference</text>
+  <text x="1255" y="692" fill="#e2e8f0" font-size="12">• Mode 2: Zero-Training OpenCV Vision</text>
+  <text x="1255" y="714" fill="#e2e8f0" font-size="12">• Mode 3: Hybrid (ML + OpenCV)</text>
+  <text x="1255" y="736" fill="#e2e8f0" font-size="12">• Smooths steering &amp; sends commands</text>
+  <text x="1255" y="758" fill="#fde047" font-size="12" font-weight="bold">• Arduino Hardware Reflex prevents crash</text>
+
+  <!-- Bottom Loopback Arrow from Box 4 to Box 1 -->
+  <rect x="60" y="815" width="1480" height="95" rx="8" fill="#090d16" stroke="#334155" stroke-width="1.5"/>
+  <text x="800" y="842" fill="#38bdf8" font-size="14" font-weight="bold" text-anchor="middle">DUAL-PROCESSOR SAFETY ADVANTAGE (ESP32-CAM + ARDUINO UNO)</text>
+  <text x="800" y="866" fill="#e2e8f0" font-size="13" text-anchor="middle">ESP32-CAM + Python ML handles high-level vision decisions (lanes, path following, visual obstacles) at ~15-20 FPS,</text>
+  <text x="800" y="888" fill="#6ee7b7" font-size="13" font-weight="bold" text-anchor="middle">while Arduino Uno runs a hard real-time loop (&lt;20ms) checking Ultrasonic + 2x IR sensors to override ML if an obstacle is too close!</text>
+</svg>

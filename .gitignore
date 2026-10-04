@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# ML pipeline: collected training data and generated model binaries
+phase3_esp32cam_ml/ml_pipeline/dataset/
+phase3_esp32cam_ml/ml_pipeline/models/*.keras
+phase3_esp32cam_ml/ml_pipeline/models/*.tflite
+phase3_esp32cam_ml/ml_pipeline/models/*.h5
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
