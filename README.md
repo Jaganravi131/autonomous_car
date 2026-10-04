@@ -261,7 +261,30 @@ python3 3_run_autonomous_ml.py --ip 192.168.4.1 --mode vision
 
 ---
 
-## 5. Repository Structure
+## 5. Troubleshooting & FAQ (expert advice you may have read elsewhere)
+
+**Q: I read that `PIN_IN2` on Pin 3 is a "critical Timer2 conflict" with the Servo library. Must I move it?**
+**A: No. That advice is wrong — keep Pin 3.** Verified facts about this exact code:
+- `Pin 3` is used **only** with `digitalWrite(PIN_IN2, ...)` (line 194 of `complete_car.ino`). It is **never** used with `analogWrite()` or `tone()`.
+- Timer2 is only involved in PWM when you call `analogWrite(3, ...)` or `analogWrite(11, ...)`, or `tone()`. **None of those are used anywhere in this project.** A plain `digitalWrite()` and `pinMode(..., OUTPUT)` do not touch any timer at all.
+- Therefore there is **zero** Timer2 involvement, and no "interrupt timing clash" is possible from Pin 3.
+- The advice is also **self-contradictory**: it says Pin 3 is bad because it shares **Timer2**, then suggests moving to **Pin 11 — which is also a Timer2 PWM pin.** Moving to Pin 11 would be strictly worse, so **do not do that.**
+- Why PWM lives on `D5`/`D6`: `Servo.h` takes **Timer1**, which kills `analogWrite()` (not `digitalWrite()`) on `D9`/`D10`. Putting `ENA`/`ENB` on Timer0 pins `D5`/`D6` is the actual fix, and it is already applied. `D9` is used only as a `pulseIn()` ECHO input, which uses no timer.
+
+> If you simply *prefer* to move `IN2` off Pin 3 for peace of mind, use **`D12`** (a plain digital pin with no timer, no PWM, no SPI use) — **never `D11`**. It is a 1-line change plus 1 wire; nothing else in the project breaks. Ask and it will be updated everywhere (sketches + schematic + table).
+
+**Q: Does `Servo.h` + `SoftwareSerial` on `A2`/`A3` cause glitches?**
+**A: No, at the 9600 baud used here.** The Servo interrupt is only a few microseconds long, while one bit at 9600 baud lasts ~104 µs — a ~30x margin. (This pairing is only risky at 115200 baud, which this project never uses.) `A2`/`A3` are `PCINT10`/`PCINT11` on the ATmega328P, which exist and work correctly for `SoftwareSerial`. If commands ever look garbled, the real cause is almost always the ESP32-CAM's 3.3V TX into the Uno's 5V RX (a valid but ~300 mV margin) — fix by keeping the wire short, or add a 2N7000/BSS138 level shifter.
+
+**Q: Is `SELF_TEST_MOTORS` safe?**
+**A: Yes, and it is already `0`.** Leave it `0` while powered by USB — a boot-time motor pulse can trip your PC's USB over-current protection. Set it to `1` only when the motor supply (battery/pack) is connected.
+
+**Q: My car reverses when the room is empty — is the IR logic backwards?**
+**A: Maybe — change `#define IR_ACTIVE_LOW 1` to `0`.** Most IR modules output LOW on detection (`1`), but a few do the opposite. You can also see this instantly in the boot self-test output (`Left IR sensor : OBSTACLE/clear` with an empty floor).
+
+---
+
+## 6. Repository Structure
 
 ```text
 autonomous_car/
