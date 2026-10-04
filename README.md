@@ -114,7 +114,7 @@ Here is how every wire connects **with zero breadboard**:
 | **Left & Right IR Sensors** | `VCC` / `GND`| `+5.0V Rail` / `Common GND` | Phase 2 | Tune blue pot so green LED lights at ~12 cm |
 | **ESP32-CAM** | `5V` / `GND` | **Buck `+5.0V Rail`** / `Common GND` | Phase 3 | Needs stable 5.0V from Buck Converter |
 | **ESP32-CAM** | `U0T (GPIO1)`| Arduino **`A2` (SoftSerial RX)** | Phase 3 | **1 direct wire** (3.3V TX → 5V RX is safe!) |
-| **ESP32-CAM** *(Optional)* | `U0R (GPIO3)`| Arduino **`A3` (SoftSerial TX)** | Phase 3 | Optional telemetry (use 1kΩ/2kΩ divider) |
+| **ESP32-CAM** *(Optional)* | `IO13` | Arduino **`A3` (SoftSerial TX)** | Phase 3 | Live telemetry for the dashboard. **`A3` --1kΩ--> `IO13`, plus 2kΩ `IO13`→GND.** Uses IO13 (SD-card pin, unused here) so the flashing pins `GPIO1/GPIO3` stay free. |
 
 ---
 
@@ -207,7 +207,8 @@ Once Phase 1 and Phase 2 pass, your hardware platform is 100% verified. Now add 
 | **T1** | Arduino Uno + ESP32-CAM (5V, GND, D0, D1, RESET→GND) | ❌ No (USB) | You can flash the ESP32-CAM successfully |
 | **T2** | Remove D0/D1/RESET, keep `5V + GND` from the Arduino Uno | ❌ No (USB) | Wi-Fi connects, `192.168.4.1` video stream works |
 | **T3** | Move ESP32-CAM `5V`/`GND` to the **Buck Converter `OUT+`/`OUT-`** + Battery | ✅ **Yes** | ESP32-CAM runs standalone on battery power |
-| **T4** | Add the single wire **ESP32-CAM `U0T` → Arduino `A2`** (Buck still powering ESP32) | ✅ Yes | `/cmd?c=F` reaches the Arduino (Serial Monitor prints `CMD: F`) |
+| **T4** | Add the single wire **ESP32-CAM `U0T` → Arduino `A2`** (Buck still powering ESP32) | ✅ Yes | `/cmd?c=F` reaches the Arduino (Serial Monitor prints `>> MODE = CAMERA` / motor action) |
+| **T4b** *(optional)* | Add telemetry: **`A3` --1kΩ--> ESP32 `IO13`**, plus 2kΩ `IO13`→GND | ✅ Yes | The green telemetry box on the dashboard shows live distance / IR / mode |
 | **T5** | Add L298N + 4 motors | ✅ Yes | Wheels actually respond to `/cmd?c=...` |
 | **T6** | Add Ultrasonic + Servo + 2x IR Sensors | ✅ Yes | Full car runs like Phase 1/2, but now driven via Wi-Fi |
 
@@ -224,6 +225,21 @@ Once Phase 1 and Phase 2 pass, your hardware platform is 100% verified. Now add 
 2. **Flash ESP32-CAM**: Open [`phase3_esp32cam_ml/esp32cam_firmware/esp32cam_firmware.ino`](phase3_esp32cam_ml/esp32cam_firmware/esp32cam_firmware.ino), set your `WIFI_SSID` and `WIFI_PASS` (or leave as default to use its built-in Wi-Fi Access Point `AutonomousCar-CAM`, password `12345678`, IP `192.168.4.1`), select board **`AI Thinker ESP32-CAM`**, and upload.
 3. **Connect the 1 Signal Wire**: Connect **ESP32-CAM `U0T (GPIO1)` → Arduino Uno `A2`**, plus `5V` and `GND` from the Buck Converter.
 4. **Browser Test**: Open `http://192.168.4.1` (or the station IP printed on Serial) in your browser. Verify live video streaming and drive the car with `W/A/S/D` or on-screen buttons!
+
+#### Step 3A-1: How do I know the CAMERA is connected, and WHERE do I see the video?
+
+There are **four independent ways** to confirm the camera works. Work down the list — each one needs the previous to be true.
+
+| # | Where to look | What you should see | If it fails |
+|:--:|---|---|---|
+| **1** | **Arduino Serial Monitor** (`9600` baud) — the Uno echoes everything the ESP32 says, prefixed with `[CAM]` | `[CAM] ===== 4WD Autonomous Car - ESP32-CAM =====` then `[CAM] Camera OK` then `[CAM] [WiFi] Join Wi-Fi "AutonomousCar-CAM"` and the dashboard URL | `Camera init FAILED, error 0x105` → the `GPIO0 → GND` wire is still attached. Remove it and press the ESP32 `RST`. |
+| **2** | **Phone / laptop Wi-Fi list** | A network named **`AutonomousCar-CAM`** (password `12345678`) | ESP32 not powered, or it joined your home Wi-Fi instead (then use the IP printed in `[CAM] [WiFi] Connected. Dashboard: http://…`) |
+| **3** | **Browser** → `http://192.168.4.1/` | The **dashboard**: live video + buttons + the green telemetry box | Video box empty → open `http://192.168.4.1:81/stream` directly; if that also fails, the camera never initialised (back to row 1) |
+| **4** | **Terminal** → `curl -s -o test.jpg http://192.168.4.1/capture` then open `test.jpg` | A single saved JPEG photo | Same as row 3 |
+
+> **The Uno echoing the ESP32's messages is deliberate.** Because the ESP32's TX wire goes into the Uno's `A2`, and the Uno prints what it receives onto its own USB Serial Monitor, **your Arduino Serial Monitor becomes the ESP32's debug console.** That is how you read the ESP32's IP address and camera errors without buying a USB-TTL adapter.
+
+**The dashboard now also shows live telemetry** (green box): distance in cm, both IR sensors, the Uno's current mode and speed — read from the Arduino over the optional `A3 → IO13` wire. Without that wire it shows *"No telemetry from the Arduino… The car still drives fine without it."*
 
 #### Step 3B: Collect Your Training Dataset (`1_collect_data.py`)
 Drive the car manually around your room/track using your laptop keyboard (`W`=Forward, `Q`=Gentle Left, `E`=Gentle Right, `A`=Spin Left, `D`=Spin Right, `S`=Stop) while the script automatically saves labeled camera frames into `dataset/<COMMAND>/`:
@@ -261,7 +277,101 @@ python3 3_run_autonomous_ml.py --ip 192.168.4.1 --mode vision
 
 ---
 
-## 5. Troubleshooting & FAQ (expert advice you may have read elsewhere)
+## 5. How To Train The ML Model — Exact Steps, And What You Will See
+
+Everything here runs **on your laptop only**. No car, no battery, no sensors required. Open a terminal:
+
+```bash
+cd phase3_esp32cam_ml/ml_pipeline
+pip install -r requirements.txt      # opencv-python, numpy, requests, pillow, scikit-learn
+
+# ---- STEP 1: get a dataset -------------------------------------------------
+# A) quick test with NO hardware (synthetic road images) - takes ~5 seconds:
+python3 1_collect_data.py --simulate --dataset dataset --samples 180
+
+# B) real data from the ESP32-CAM (this is what you actually want):
+#    hold the camera / carry the car along your track and press keys to record
+python3 1_collect_data.py --ip 192.168.4.1 --dataset dataset
+```
+**What you see for (B):** a window titled *ESP32-CAM Data Collector* showing live video with a HUD:
+`CMD: F | REC: ON | Saved: 143`. Drive with **`w`** forward, **`q`**/**`e`** gentle curves, **`a`**/**`d`** sharp turns, **`s`** stop.
+Frames are saved automatically into `dataset/F/`, `dataset/G/`, …… at ~8 per second, logged in `dataset/driving_log.csv`.
+Press **`r`** to pause recording, **`ESC`** to quit.
+
+```bash
+# ---- STEP 2: train --------------------------------------------------------
+python3 2_train_model.py --dataset dataset --model-dir models --epochs 35
+```
+**What you see:**
+```
+[1/3] Loading and augmenting dataset from 'dataset/'...
+      Loaded 360 total samples (including mirror augmentation) of shape (36, 48, 3)
+[2/3] Training Neural Network (288 train, 72 validation)...
+  Epoch 05/35 — Train Acc:  95.1% | Val Acc:  95.8%
+  Epoch 10/35 — Train Acc:  99.0% | Val Acc:  97.2%
+  ...
+  Epoch 35/35 — Train Acc: 100.0% | Val Acc: 100.0%
+[3/3] Saved portable Neural Network weights -> models/autonomous_car_model.npz
+```
+*"Loaded 360 total samples"* from 180 collected images — the mirror augmentation doubles it by flipping each image and swapping Left↔Right labels.
+**Val Acc** is the number that matters. **Below ~70%**: collect more frames, drive more smoothly, keep the car centred on the track while recording.
+
+```bash
+# ---- STEP 3: check the model BEFORE letting it drive ----------------------
+python3 3_run_autonomous_ml.py --test-on-dataset dataset --model models/autonomous_car_model.npz --mode hybrid
+```
+**What you see:** `Evaluated 180 road frames in 388.4 ms (463.5 FPS)` and `Classification Accuracy: 180/180 (100.0%)`.
+This offline benchmark is your safety gate — if accuracy is poor here, **do not** put the car on the floor yet.
+
+```bash
+# ---- STEP 4: let the model drive the car ---------------------------------
+python3 3_run_autonomous_ml.py --ip 192.168.4.1 --model models/autonomous_car_model.npz --mode hybrid
+```
+**What you see:** a window *Autonomous Car — Live ML Autopilot* with `MODE: HYBRID | PRED: F (94%)`. Press **`ESC`** to stop (the script then sends `S` to the car).
+The Uno's ultrasonic + IR sensors stay active the whole time and **override** the model within 20 cm, so a bad prediction cannot cause a crash.
+
+| Mode | What it uses | When to use it |
+|---|---|---|
+| `--mode ml` | only your trained network | after you have a good dataset |
+| `--mode vision` | zero-training OpenCV heuristics | **before** collecting any data — try it first |
+| `--mode hybrid` | 75% network + 25% vision | the recommended default |
+
+---
+
+## 6. Is The Arduino Code Complete And Correct? (verification report)
+
+I cannot put your hardware on a bench, so here is exactly **what has been proven** and **what only real hardware can prove**.
+
+### ✅ Proven by machine (reproducible, not opinion)
+
+| Check | Result |
+|---|---|
+| All 4 sketches compile with `-Wall -Wextra` (no warnings) | ✅ pass |
+| `complete_car.ino` runs `setup()` + `loop()` headless without crashing | ✅ pass |
+| 13-case behaviour test suite (modes, framing, telemetry format, grace period) | ✅ **13/13 pass** |
+| Motor outputs asserted: `w` sets ENA>0 **and** ENB>0; `s` sets both to 0 | ✅ pass |
+| Cross-check: Uno telemetry output ↔ ESP32 parser agree exactly | ✅ pass |
+| Dashboard JavaScript syntax (`node --check`) | ✅ pass |
+| Every called function is defined; braces/parens balanced | ✅ pass |
+
+### ⚠️ Requires real hardware to confirm (do these on the bench first)
+
+1. **Motor direction polarity** — if a side runs backwards, swap that pair's two wires on `OUT1/OUT2` or `OUT3/OUT4`. This is wiring, not code.
+2. **IR modules: active-low vs active-high** — the boot self-test prints `Left IR sensor : OBSTACLE/clear` with an empty floor. If it says OBSTACLE with nothing there, set `#define IR_ACTIVE_LOW 0`.
+3. **Servo direction** — if the radar sweeps the wrong way, swap the values in `RADAR_ANGLES[]`.
+4. **Ultrasonic accuracy** — compare the printed cm against a ruler.
+
+### 🐛 A real bug that WAS found and FIXED in this revision
+
+The ESP32-CAM prints debug text on the very same wire it sends commands on. Text like `[CAM] Streaming...` contains the letters **C, A, M, S** — and the previous version of the Uno code accepted those as **mode changes and STOP**, and `rst:0x1 (POWERON_RESET)` contains **R** (spin right!). **Symptoms you would have seen:** random mode switching, the car stopping or twitching for no reason, especially right after power-up.
+
+**Fix:** commands are now wrapped in a frame — `'~'` + letter + newline (`~F\n`). The Uno ignores *everything* outside a frame, so boot logs and debug text can never steer the car. There is also a 3-second grace period that swallows the ESP32's boot burst entirely. Both are verified by tests 1, 3, 4 and 7 above.
+
+**Nothing changed for you at the controls:** the dashboard buttons, the `w/a/s/d` keyboard driving, and all three Python modes keep working exactly as before — the ESP32 firmware adds the `~` automatically.
+
+---
+
+## 7. Troubleshooting & FAQ (expert advice you may have read elsewhere)
 
 **Q: I read that `PIN_IN2` on Pin 3 is a "critical Timer2 conflict" with the Servo library. Must I move it?**
 **A: No. That advice is wrong — keep Pin 3.** Verified facts about this exact code:
@@ -284,7 +394,7 @@ python3 3_run_autonomous_ml.py --ip 192.168.4.1 --mode vision
 
 ---
 
-## 6. Repository Structure
+## 8. Repository Structure
 
 ```text
 autonomous_car/

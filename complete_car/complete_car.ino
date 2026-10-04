@@ -72,6 +72,22 @@
 
 #define LOOP_MS            20   // main loop period (safety check every 20 ms)
 
+// --- ESP32-CAM link protection ---------------------------------------------
+// The ESP32 prints its own debug text on the SAME wire it uses for commands.
+// Words like "[CAM] Streaming..." contain A, C, M and S - which the Uno would
+// otherwise read as MODE CHANGES / STOP!  So real commands are now wrapped in a
+// frame:   '~' + command letter + newline      e.g.  ~F\n
+// Anything arriving outside a frame (boot logs, debug text, noise) is ignored.
+#define CAM_FRAME_CHAR    '~'
+#define CAM_GRACE_MS    3000    // ignore ALL cam input for 3 s after power-up
+                                // (covers the ESP32 boot-log burst)
+
+// --- Telemetry back to the ESP32 dashboard (OPTIONAL extra wire) -----------
+// Uno A3  --[1k ohm]-->  ESP32-CAM IO13,  plus 2k ohm from IO13 to GND
+#define SEND_TELEMETRY      1   // set 0 if you did not add the A3 -> IO13 wire
+#define TELEMETRY_MS      500   // how often to report
+
+
 #define SELF_TEST_MOTORS    0   // keep 0 while running on USB power only!
                                 // set to 1 once the battery / motor supply exists
 
@@ -97,6 +113,9 @@ unsigned long lastCamCmdMs  = 0;
 unsigned long lastLoopMs    = 0;
 char          lastCamCmd    = 'S';
 
+bool          camInFrame    = false;   // parser state for the '~X\n' protocol
+unsigned long lastTelemMs   = 0;
+
 // ---- forward declarations (so the code also compiles as a plain .cpp) ------
 void  driveMotors(int leftSpeed, int rightSpeed);
 void  stopMotors();
@@ -112,7 +131,9 @@ void  sensorAutoDrive();
 void  emergencyAvoid();
 void  cameraMlDrive();
 void  handleIncoming();
+void  handleCamChar(char c);
 void  processChar(char c, bool fromCam);
+void  sendTelemetry();
 void  printHelp();
 
 // ============================================================================
@@ -179,6 +200,12 @@ void loop() {
     case MODE_AUTO:    sensorAutoDrive(); break;
     case MODE_CAMERA:  cameraMlDrive();   break;
     default:           stopMotors();      break;
+  }
+
+  // report distance / IR / mode to the ESP32 dashboard (optional wire)
+  if (now - lastTelemMs >= TELEMETRY_MS) {
+    lastTelemMs = now;
+    sendTelemetry();
   }
 }
 
@@ -376,14 +403,37 @@ void cameraMlDrive() {
 //                     INCOMING CHARACTERS (keys + ESP32)
 // ============================================================================
 void handleIncoming() {
-  while (Serial.available())    processChar((char)Serial.read(),    false); // keyboard
-  while (camSerial.available()) processChar((char)camSerial.read(), true);  // ESP32-CAM
+  // --- USB Serial Monitor: raw characters, this link is trusted -----------
+  while (Serial.available()) processChar((char)Serial.read(), false);
+
+  // --- ESP32-CAM: ONLY framed commands are accepted ----------------------
+  while (camSerial.available()) handleCamChar((char)camSerial.read());
+}
+
+// Frame parser:  '~' <command> '\n'
+// Everything the ESP32 prints outside such a frame is silently thrown away,
+// so boot logs and debug text can never steer the car or change its mode.
+void handleCamChar(char c) {
+  if (millis() < CAM_GRACE_MS) return;          // ignore the boot-log burst
+
+  if (c == CAM_FRAME_CHAR) {                    // start of a frame
+    camInFrame = true;
+    return;
+  }
+  if (c == '\n' || c == '\r') {                 // end of a frame
+    camInFrame = false;
+    return;
+  }
+  if (!camInFrame) return;                      // unframed noise -> ignore
+
+  camInFrame = false;                           // exactly one command per frame
+  processChar(c, true);
 }
 
 // KEEPING IT SIMPLE:
 //   CAPITAL letters in the Serial Monitor = MODE keys : M / A / C / H / S
 //   small   letters in the Serial Monitor = MOVEMENT : w q e a d b s
-//   Letters coming from the ESP32-CAM       = MOVEMENT : F G I L R B S + A / C modes
+//   ESP32-CAM frames                      = MOVEMENT : F G I L R B S  + A / C modes
 void processChar(char c, bool fromCam) {
   if (c == '\n' || c == '\r' || c == ' ') return;
 
@@ -391,22 +441,26 @@ void processChar(char c, bool fromCam) {
   if (c >= '1' && c <= '9') {
     driveSpeed = map(c - '0', 1, 9, 90, 255);
     Serial.print(F(">> Speed set to ")); Serial.println(driveSpeed);
+    sendTelemetry();
     return;
   }
 
-  // ---- MODE keys (capital letters, from either source) ------------------
+  // ---- MODE keys (from the Serial Monitor, or inside a CAM frame) --------
   switch (c) {
     case 'M':
       mode = MODE_MANUAL; stopMotors();
       Serial.println(F(">> MODE = MANUAL  (drive with w q e a d b s)"));
+      sendTelemetry();
       return;
     case 'A':
       mode = MODE_AUTO; stopMotors();
       Serial.println(F(">> MODE = AUTO    (servo + ultrasonic + 2x IR)"));
+      sendTelemetry();
       return;
     case 'C':
       mode = MODE_CAMERA; stopMotors(); lastCamCmdMs = 0;
       Serial.println(F(">> MODE = CAMERA  (laptop ML model + hardware safety net)"));
+      sendTelemetry();
       return;
     case 'H': case '?':
       printHelp();
@@ -415,6 +469,7 @@ void processChar(char c, bool fromCam) {
       stopMotors();
       if (mode == MODE_CAMERA) { lastCamCmd = 'S'; lastCamCmdMs = millis(); }
       Serial.print(F(">> STOP (")); Serial.print(fromCam ? F("CAM") : F("PC")); Serial.println(F(")"));
+      sendTelemetry();
       return;
   }
 
@@ -467,6 +522,27 @@ void processChar(char c, bool fromCam) {
     case 'B': backward();   break;
   }
   Serial.print(F(">> MANUAL move '")); Serial.print(mapped); Serial.println(F("'"));
+}
+
+// ============================================================================
+//        TELEMETRY BACK TO THE ESP32 DASHBOARD  (optional extra wire)
+// ============================================================================
+// Arduino A3 (5V TX) --[1k]--> ESP32-CAM IO13,  and 2k from IO13 to GND
+// Line format:  #D:123,L:0,R:1,M:2,V:165\n
+void sendTelemetry() {
+#if SEND_TELEMETRY
+  camSerial.print(F("#D:"));
+  camSerial.print((int)distanceCm);
+  camSerial.print(F(",L:"));
+  camSerial.print(irLeft  ? 1 : 0);
+  camSerial.print(F(",R:"));
+  camSerial.print(irRight ? 1 : 0);
+  camSerial.print(F(",M:"));
+  camSerial.print((int)mode);
+  camSerial.print(F(",V:"));
+  camSerial.print(driveSpeed);
+  camSerial.print(F("\n"));
+#endif
 }
 
 void printHelp() {

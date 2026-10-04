@@ -45,7 +45,8 @@ const int PIN_IR_RIGHT = A1;
 
 // -------------------- ESP32-CAM UART BRIDGE PINS -------------------
 const int PIN_ESP_RX   = A2; // Connects to ESP32-CAM U0T (GPIO1 TX)
-const int PIN_ESP_TX   = A3; // Optional: Connects to ESP32-CAM U0R (GPIO3 RX)
+const int PIN_ESP_TX   = A3; // Optional telemetry -> ESP32-CAM IO13 via 1k/2k divider
+                             // (NOT U0R/GPIO3, so the flashing pins stay free)
 
 SoftwareSerial espSerial(PIN_ESP_RX, PIN_ESP_TX); // RX, TX
 Servo radarServo;
@@ -58,6 +59,13 @@ const int IR_OBSTACLE_DETECTED   = LOW;
 
 const int EMERGENCY_STOP_CM      = 20;  // Hard safety override distance in ML mode
 const unsigned long WATCHDOG_MS  = 900; // Stop motors if no ML command for 900 ms
+
+// ---- ESP32-CAM link protection --------------------------------------------
+// The ESP32 prints its own boot logs and debug text on the SAME wire it uses
+// for commands, and words like "[CAM] Streaming..." contain M, A, C and S.
+// Commands are therefore wrapped in a frame:  '~' + letter + '\n'.
+const char CAM_FRAME_CHAR        = '~';
+const unsigned long CAM_GRACE_MS = 3000; // ignore cam input for 3 s after boot
 
 // -------------------- RUNTIME STATE --------------------------------
 bool autonomousSensorMode        = false; // false = Camera/ML Mode ('C'), true = Sensor Autonomous ('A')
@@ -276,17 +284,37 @@ void setup() {
 // ============================================================================
 // MAIN LOOP
 // ============================================================================
+// FRAMED ESP32-CAM INPUT:   '~' <command> '\n'
+// Everything outside a frame (boot logs, "[CAM] ..." debug lines, noise) is
+// ignored, so the ESP32 can never accidentally steer the car or change modes.
+// ============================================================================
+static bool camInFrame = false;
+
+void handleCamByte(char c) {
+  if (millis() < CAM_GRACE_MS) return;      // ignore the ESP32 boot-log burst
+
+  if (c == CAM_FRAME_CHAR)   { camInFrame = true;  return; }
+  if (c == '\n' || c == '\r') { camInFrame = false; return; }
+  if (!camInFrame) return;                  // unframed noise -> ignore
+
+  camInFrame = false;                       // exactly one command per frame
+  processIncomingByte(c);
+}
+
+// ============================================================================
 void loop() {
-  // 1. Read commands from ESP32-CAM (Pin A2)
+  // 1. Read commands from ESP32-CAM (Pin A2) - ALWAYS inside a frame.
+  //    The ESP32 also prints boot logs and debug text on this same wire.
+  //    Words like "[CAM] Streaming..." contain M, A, C and S, so unframed
+  //    text must NEVER be treated as a command.  Frame format:  ~X\n
   while (espSerial.available() > 0) {
-    char c = (char)espSerial.read();
-    processIncomingByte(c);
+    handleCamByte((char)espSerial.read());
   }
 
-  // 2. Also accept commands from USB Serial Monitor for bench testing
+  // 2. USB Serial Monitor for bench testing - accepts plain characters
+  //    (this link is trusted: it is your own keyboard, no boot logs)
   while (Serial.available() > 0) {
-    char c = (char)Serial.read();
-    processIncomingByte(c);
+    processIncomingByte((char)Serial.read());
   }
 
   // 3. Read safety sensors

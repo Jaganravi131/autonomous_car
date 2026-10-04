@@ -61,6 +61,14 @@ const char* AP_PASS   = "12345678";
 #define PCLK_GPIO_NUM     22
 #define FLASH_LED_PIN      4
 
+// -------------------- TELEMETRY LINK FROM THE ARDUINO UNO -------------------
+// Arduino A3 (5V TX) --[1k ohm]--> ESP32-CAM IO13,  and 2k ohm IO13 -> GND
+// UART1 is remapped onto IO13 so that UART0 (GPIO1/GPIO3) stays free for
+// flashing and for sending commands.  IO13/IO14 are the pins shared with the
+// microSD slot - this project does not use the SD card.
+#define LINK_RX_PIN       13     // set -1 if you did not wire the A3 telemetry line
+static HardwareSerial LinkSerial(1);
+
 // -------------------- MJPEG STREAM BOUNDARY ------------------------
 #define PART_BOUNDARY "123456789000000000000987654321"
 static const char* _STREAM_CONTENT_TYPE = "multipart/x-mixed-replace;boundary=" PART_BOUNDARY;
@@ -69,6 +77,49 @@ static const char* _STREAM_PART         = "Content-Type: image/jpeg\r\nContent-L
 
 httpd_handle_t cmd_httpd    = NULL;
 httpd_handle_t stream_httpd = NULL;
+
+// -------------------- LIVE TELEMETRY CACHE (from Arduino) ------------------
+// Line received from the Uno looks like:  #D:87,L:1,R:0,M:2,V:165\n
+struct Telemetry {
+  int          dist  = -1;    // cm from HC-SR04
+  int          irL   = -1;    // 1 = obstacle seen
+  int          irR   = -1;
+  int          mode  = -1;    // 0 STOP, 1 MANUAL, 2 AUTO, 3 CAMERA/ML
+  int          speed = -1;
+  unsigned long lastMs = 0;   // when the last line arrived
+};
+static Telemetry tele;
+static char    lineBuf[48];
+static uint8_t lineLen = 0;
+
+static void parseTelemetryLine(const char *s) {
+  if (s[0] != '#') return;
+  int d, l, r, m, v;
+  if (sscanf(s, "#D:%d,L:%d,R:%d,M:%d,V:%d", &d, &l, &r, &m, &v) == 5) {
+    tele.dist   = d;
+    tele.irL    = l;
+    tele.irR    = r;
+    tele.mode   = m;
+    tele.speed  = v;
+    tele.lastMs = millis();
+  }
+}
+
+static void pollTelemetry() {
+  if (LINK_RX_PIN < 0) return;
+  while (LinkSerial.available()) {
+    char c = (char)LinkSerial.read();
+    if (c == '\n' || c == '\r') {
+      if (lineLen) {
+        lineBuf[lineLen] = '\0';
+        parseTelemetryLine(lineBuf);
+        lineLen = 0;
+      }
+    } else if (lineLen < sizeof(lineBuf) - 1) {
+      lineBuf[lineLen++] = c;
+    }
+  }
+}
 
 // -------------------- BUILT-IN WEB DASHBOARD HTML ------------------
 static const char PROGMEM INDEX_HTML[] = R"rawliteral(
@@ -89,11 +140,15 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
     .stop-btn { border-color: #ef4444; background: #7f1d1d; }
     .mode-bar { margin-top: 12px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
     .status { color: #fde047; font-size: 14px; margin-top: 8px; }
+    #tele { background: #1e293b; border: 2px solid #22c55e; border-radius: 8px; padding: 10px; margin: 10px auto; max-width: 420px; font-size: 14px; line-height: 1.7; }
+    #tele b { color: #4ade80; }
+    .warn { color: #fca5a5; }
   </style>
 </head>
 <body>
   <h2>4WD Autonomous Car — ESP32-CAM Controller</h2>
   <div id="stream-box"><img id="cam" src=""></div>
+  <div id="tele">Waiting for the Arduino Uno telemetry…</div>
   <div class="status" id="status">Last Command: S (Hold W/A/S/D or Q/E keys to drive)</div>
   <div class="grid">
     <button onmousedown="send('G')" onmouseup="send('S')" ontouchstart="send('G')" ontouchend="send('S')">↖ Curve L (Q)</button>
@@ -129,6 +184,27 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
       const k = e.key.toUpperCase();
       if (k === activeKey) { activeKey = null; send('S'); }
     });
+
+    // ---- LIVE TELEMETRY PANEL (distance + IR + Arduino mode) ----
+    const MODE_NAMES = {0:'STOP', 1:'MANUAL', 2:'AUTO (sensors)', 3:'CAMERA / ML'};
+    function poll() {
+      fetch('/status').then(r => r.json()).then(d => {
+        const box = document.getElementById('tele');
+        if (!d.link) {
+          box.innerHTML = '<span class="warn">No telemetry from the Arduino.</span><br>' +
+                          'Optional wire missing: Arduino <b>A3</b> --[1k]--&gt; ESP32 <b>IO13</b> (+2k to GND).<br>' +
+                          'The car still drives fine without it.';
+          return;
+        }
+        box.innerHTML =
+          'Distance: <b>' + d.dist + ' cm</b> &nbsp;|&nbsp; IR left: <b>' + (d.irL ? 'BLOCKED' : 'clear') + '</b>' +
+          ' &nbsp;|&nbsp; IR right: <b>' + (d.irR ? 'BLOCKED' : 'clear') + '</b><br>' +
+          'Arduino mode: <b>' + (MODE_NAMES[d.mode] || '?') + '</b> &nbsp;|&nbsp; Speed: <b>' + d.speed + '</b>' +
+          ' &nbsp;|&nbsp; <span style="color:#94a3b8">updated ' + d.age + ' ms ago</span>';
+      }).catch(() => {});
+    }
+    setInterval(poll, 500);
+    poll();
   </script>
 </body>
 </html>
@@ -197,7 +273,10 @@ static esp_err_t cmd_handler(httpd_req_t *req) {
     if (httpd_req_get_url_query_str(req, buf, buf_len) == ESP_OK) {
       char param[8];
       if (httpd_query_key_value(buf, "c", param, sizeof(param)) == ESP_OK) {
-        // Send single command character directly over U0T (GPIO1) to Arduino A2
+        // Send the command to the Arduino INSIDE A FRAME: '~' + cmd + '\n'
+        // The Uno ONLY accepts framed commands, so the boot logs / debug text
+        // this sketch prints on the same wire can never be read as a command.
+        Serial.write('~');
         Serial.write(param[0]);
         Serial.write('\n');
       }
@@ -205,6 +284,24 @@ static esp_err_t cmd_handler(httpd_req_t *req) {
   }
   httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
   return httpd_resp_send(req, "OK", 2);
+}
+
+// ============================================================================
+// HTTP HANDLER: Live Telemetry JSON (/status)  <- read by the dashboard panel
+// ============================================================================
+static esp_err_t status_handler(httpd_req_t *req) {
+  char json[192];
+  bool fresh = (tele.lastMs != 0) && (millis() - tele.lastMs < 2000);
+  unsigned long age = tele.lastMs ? (millis() - tele.lastMs) : 0;
+
+  snprintf(json, sizeof(json),
+           "{\"link\":%s,\"dist\":%d,\"irL\":%d,\"irR\":%d,\"mode\":%d,\"speed\":%d,\"age\":%lu}",
+           fresh ? "true" : "false",
+           tele.dist, tele.irL, tele.irR, tele.mode, tele.speed, age);
+
+  httpd_resp_set_type(req, "application/json");
+  httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+  return httpd_resp_send(req, json, strlen(json));
 }
 
 // ============================================================================
@@ -217,12 +314,14 @@ void startCameraServer() {
   httpd_uri_t index_uri   = { .uri = "/",        .method = HTTP_GET, .handler = index_handler,   .user_ctx = NULL };
   httpd_uri_t cmd_uri     = { .uri = "/cmd",     .method = HTTP_GET, .handler = cmd_handler,     .user_ctx = NULL };
   httpd_uri_t capture_uri = { .uri = "/capture", .method = HTTP_GET, .handler = capture_handler, .user_ctx = NULL };
+  httpd_uri_t status_uri  = { .uri = "/status",  .method = HTTP_GET, .handler = status_handler,  .user_ctx = NULL };
   httpd_uri_t stream_uri  = { .uri = "/stream",  .method = HTTP_GET, .handler = stream_handler,  .user_ctx = NULL };
 
   if (httpd_start(&cmd_httpd, &config) == ESP_OK) {
     httpd_register_uri_handler(cmd_httpd, &index_uri);
     httpd_register_uri_handler(cmd_httpd, &cmd_uri);
     httpd_register_uri_handler(cmd_httpd, &capture_uri);
+    httpd_register_uri_handler(cmd_httpd, &status_uri);
   }
 
   config.server_port += 1; // Port 81
@@ -278,10 +377,22 @@ void setup() {
     config.fb_count     = 1;
   }
 
+  // Telemetry link from the Arduino Uno (UART1 remapped to IO13, RX only).
+  // Safe to enable even if the optional wire is not connected.
+  if (LINK_RX_PIN >= 0) {
+    LinkSerial.begin(9600, SERIAL_8N1, LINK_RX_PIN, -1);
+  }
+
+  Serial.println();
+  Serial.println(F("===== 4WD Autonomous Car - ESP32-CAM ====="));
+
   esp_err_t err = esp_camera_init(&config);
   if (err != ESP_OK) {
+    Serial.printf("[CAM] Camera init FAILED, error 0x%x\n", err);
+    Serial.println(F("[CAM] Check: is the GPIO0 -> GND wire still attached? Remove it and reboot."));
     return;
   }
+  Serial.println(F("[CAM] Camera OK"));
 
   // Try connecting to Wi-Fi Station first; fallback to Access Point if unavailable
   WiFi.mode(WIFI_STA);
@@ -292,9 +403,17 @@ void setup() {
   }
 
   if (WiFi.status() != WL_CONNECTED) {
+    Serial.printf("[WiFi] Could not join \"%s\" -> starting own Access Point\n", WIFI_SSID);
     WiFi.mode(WIFI_AP);
     WiFi.softAP(AP_SSID, AP_PASS);
+    Serial.printf("[WiFi] Join Wi-Fi \"%s\" (password \"%s\")\n", AP_SSID, AP_PASS);
+    Serial.printf("[WiFi] Dashboard:  http://%s/\n", WiFi.softAPIP().toString().c_str());
+    Serial.printf("[WiFi] Video:      http://%s:81/stream\n", WiFi.softAPIP().toString().c_str());
+  } else {
+    Serial.printf("[WiFi] Connected. Dashboard: http://%s/\n", WiFi.localIP().toString().c_str());
+    Serial.printf("[WiFi] Video stream: http://%s:81/stream\n", WiFi.localIP().toString().c_str());
   }
+  Serial.println(F("[CAM] Control page ready. Open the Dashboard URL in a browser."));
 
   // Blink flash LED briefly twice to indicate Wi-Fi & Camera Server are ready!
   for (int i = 0; i < 2; i++) {
@@ -308,5 +427,6 @@ void setup() {
 }
 
 void loop() {
-  delay(100);
+  pollTelemetry();   // read #D:.. telemetry lines coming from the Arduino Uno
+  delay(50);
 }
