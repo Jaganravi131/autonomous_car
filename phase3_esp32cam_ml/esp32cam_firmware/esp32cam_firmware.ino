@@ -139,6 +139,10 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
     button:active { background: #0284c7; }
     .stop-btn { border-color: #ef4444; background: #7f1d1d; }
     .mode-bar { margin-top: 12px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+    .mode-title { color: #94a3b8; font-size: 13px; margin-top: 14px; }
+    button.mode-btn { padding: 11px 16px; font-size: 13px; }
+    button.active-mode { background: #15803d; border-color: #4ade80; box-shadow: 0 0 0 2px #4ade8055; }
+    .speed-bar { margin-top: 10px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
     .status { color: #fde047; font-size: 14px; margin-top: 8px; }
     #tele { background: #1e293b; border: 2px solid #22c55e; border-radius: 8px; padding: 10px; margin: 10px auto; max-width: 420px; font-size: 14px; line-height: 1.7; }
     #tele b { color: #4ade80; }
@@ -161,11 +165,20 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
     <button onmousedown="send('B')" onmouseup="send('S')" ontouchstart="send('B')" ontouchend="send('S')">▼ Reverse (S)</button>
     <div></div>
   </div>
+  <div class="mode-section">
+  <div class="mode-title">DRIVING MODE — pick one (the active one lights up green):</div>
   <div class="mode-bar">
-    <button onclick="send('C')">Mode: Camera / ML (C)</button>
-    <button onclick="send('A')">Mode: On-Board Sensors (A)</button>
-    <button onclick="send('5')">Speed: Medium (5)</button>
-    <button onclick="send('8')">Speed: Fast (8)</button>
+    <button class="mode-btn" id="m-m" onclick="send('M')">🕹 MANUAL — I drive (M)</button>
+    <button class="mode-btn" id="m-a" onclick="send('A')">🤖 AUTO — sensors drive (A)</button>
+    <button class="mode-btn" id="m-c" onclick="send('C')">🧠 CAMERA / ML — laptop drives (C)</button>
+    <button class="mode-btn stop-btn" id="m-s" onclick="send('S')">■ STOP ALL (S)</button>
+  </div>
+  <div class="speed-title mode-title">SPEED (only affects MANUAL &amp; CAMERA):</div>
+  <div class="speed-bar">
+    <button onclick="send('3')">Slow (3)</button>
+    <button onclick="send('5')">Medium (5)</button>
+    <button onclick="send('8')">Fast (8)</button>
+  </div>
   </div>
   <script>
     document.getElementById('cam').src = window.location.protocol + '//' + window.location.hostname + ':81/stream';
@@ -186,16 +199,26 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
     });
 
     // ---- LIVE TELEMETRY PANEL (distance + IR + Arduino mode) ----
+    //     Also lights up whichever DRIVING MODE the Arduino is actually in.
     const MODE_NAMES = {0:'STOP', 1:'MANUAL', 2:'AUTO (sensors)', 3:'CAMERA / ML'};
+    const MODE_BTN   = {0:'m-s', 1:'m-m', 2:'m-a', 3:'m-c'};
+    function paintMode(m) {
+      ['m-m','m-a','m-c','m-s'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.toggle('active-mode', id === MODE_BTN[m]);
+      });
+    }
     function poll() {
       fetch('/status').then(r => r.json()).then(d => {
         const box = document.getElementById('tele');
         if (!d.link) {
           box.innerHTML = '<span class="warn">No telemetry from the Arduino.</span><br>' +
-                          'Optional wire missing: Arduino <b>A3</b> --[1k]--&gt; ESP32 <b>IO13</b> (+2k to GND).<br>' +
-                          'The car still drives fine without it.';
+                          'Wire the telemetry link to see which mode is active: Arduino <b>A3</b> ' +
+                          '--[1k]--&gt; ESP32 <b>IO13</b> (+2k to GND).<br>' +
+                          'Mode buttons and driving work fine without it.';
           return;
         }
+        paintMode(d.mode);
         box.innerHTML =
           'Distance: <b>' + d.dist + ' cm</b> &nbsp;|&nbsp; IR left: <b>' + (d.irL ? 'BLOCKED' : 'clear') + '</b>' +
           ' &nbsp;|&nbsp; IR right: <b>' + (d.irR ? 'BLOCKED' : 'clear') + '</b><br>' +

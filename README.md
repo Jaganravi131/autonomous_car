@@ -2,6 +2,36 @@
 
 ---
 
+## 📥 CLONE THIS AND GET RUNNING (3 commands)
+
+Everything is already on GitHub and verified, so you can clone it right now:
+
+```bash
+git clone https://github.com/Jaganravi131/autonomous_car.git
+cd autonomous_car
+python3 tools/verify_build.py      # optional: proves your copy is intact → "18 passed, 0 failed"
+```
+
+**Then do these 4 things, in this order:**
+
+| # | Do this | How | You'll know it worked |
+|:--:|---|---|---|
+| **1** | Upload the **Uno** sketch | Arduino IDE → open `complete_car/complete_car.ino` → board *Arduino Uno* → **Upload** | Serial Monitor (9600) prints the banner + `--- BOOT SELF TEST ---` with your servo sweep and a distance in cm |
+| **2** | Flash the **ESP32-CAM** | Arduino IDE → open `phase3_esp32cam_ml/esp32cam_firmware/esp32cam_firmware.ino` → board *AI Thinker ESP32-CAM* → `GPIO0→GND`, Upload, **remove that wire**, press RST | The Uno's Serial Monitor echoes `[CAM] Camera OK` and `[CAM] [WiFi] Join Wi-Fi "AutonomousCar-CAM"` + a dashboard URL |
+| **3** | Open the **dashboard** | Join Wi-Fi `AutonomousCar-CAM` (password `12345678`) → browse to the URL from step 2 | Live video + the DRIVING MODE buttons |
+| **4** | Pick a **mode** and drive | Press **MANUAL** (it lights green) → hold **▲ Forward** | Wheels turn (lift them off the desk on USB power) |
+
+**Before flashing the ESP32, edit two lines** at the top of `esp32cam_firmware.ino` if you want it on your home Wi-Fi instead of its own hotspot:
+```cpp
+const char* WIFI_SSID = "YOUR_WIFI_NAME";
+const char* WIFI_PASS = "YOUR_WIFI_PASSWORD";
+```
+Leave them alone and it simply creates its own `AutonomousCar-CAM` network — which is actually easier and works anywhere.
+
+> **Only 1 extra wire is needed to connect the two boards:** ESP32-CAM `U0T` → Arduino `A2`. That single wire is what makes the dashboard buttons reach the car.
+
+---
+
 ## ⭐ START HERE (read this part only, ignore the rest until you need it)
 
 **Your job in this project = program the board + the ML model on the laptop.**
@@ -20,6 +50,31 @@ It is the whole car in one single program: **230° servo + ultrasonic + 2x IR + 
 | **`S`** | **STOP** | Motors off right now | no |
 
 > The 4 separate phase sketches still exist as *practice steps* (`phase1_...`, `phase2_...`, `phase3_...`). If you feel confused by them, **just use `complete_car.ino`** — it does everything they do, together, in one file.
+
+### 🎮 THE CONTROLLER DASHBOARD — where you change the mode
+
+There are **two places** you switch modes. Both work at the same time:
+
+| Place | How | Best for |
+|---|---|---|
+| **Web dashboard** on your phone/laptop | Open `http://192.168.4.1/` (or the IP the Serial Monitor prints) → press the **DRIVING MODE** buttons | Driving the car around the room from your phone |
+| **Arduino Serial Monitor** (9600 baud) | Type `M`, `A`, `C` or `S` and press Enter | Bench testing, and reading the debug text |
+
+![dashboard preview](dashboard_preview.png)
+
+**The dashboard has four DRIVING MODE buttons — `MANUAL`, `AUTO`, `CAMERA / ML`, and `STOP ALL`.**
+The active one is lit **green** so you always know which mode the Arduino is *really* in (it reads the live `/status` telemetry every 500 ms).
+
+⚠️ **That green highlight needs the one optional telemetry wire:** Arduino `A3` → [1 kΩ] → ESP32-CAM `IO13`, plus 2 kΩ from `IO13` to GND. Without it the buttons still work perfectly, you just don't get the green confirmation. See the [pin table](#3-master-pin-to-pin-connection-table).
+
+| Mode button | Sends | What the car does |
+|---|---|---|
+| 🕹 **MANUAL — I drive (M)** | `~M\n` | Waits for your movement buttons / `w a s d q e b` keys |
+| 🤖 **AUTO — sensors drive (A)** | `~A\n` | Servo radar + ultrasonic + 2 IR drive it themselves. **Movement buttons do nothing in this mode** — that's correct, the sensors are in charge |
+| 🧠 **CAMERA / ML — laptop drives (C)** | `~C\n` | Your Python model drives via `/cmd?c=…`; ultrasonic + IR override it within 20 cm |
+| ■ **STOP ALL (S)** | `~S\n` | Motors off immediately |
+
+> **Why you must press a MODE button first:** after upload the car is in **STOP**. In `AUTO` the movement buttons are deliberately ignored. Press **MANUAL** before you expect the arrows to work.
 
 ### WHAT YOU CAN DO **TODAY**, SITTING AT YOUR LAPTOP (no battery, no switch, no breadboard)
 
@@ -115,6 +170,46 @@ Here is how every wire connects **with zero breadboard**:
 | **ESP32-CAM** | `5V` / `GND` | **Buck `+5.0V Rail`** / `Common GND` | Phase 3 | Needs stable 5.0V from Buck Converter |
 | **ESP32-CAM** | `U0T (GPIO1)`| Arduino **`A2` (SoftSerial RX)** | Phase 3 | **1 direct wire** (3.3V TX → 5V RX is safe!) |
 | **ESP32-CAM** *(Optional)* | `IO13` | Arduino **`A3` (SoftSerial TX)** | Phase 3 | Live telemetry for the dashboard. **`A3` --1kΩ--> `IO13`, plus 2kΩ `IO13`→GND.** Uses IO13 (SD-card pin, unused here) so the flashing pins `GPIO1/GPIO3` stay free. |
+
+### 🔌 How the Arduino and the ESP32-CAM actually talk to each other
+
+This is the part that confuses everyone, so here it is step by step. **Only 2 wires** connect the two boards (1 is optional).
+
+```
+        YOUR PHONE / LAPTOP                       ESP32-CAM                    ARDUINO UNO
+   ┌──────────────────────────┐            ┌──────────────────────┐      ┌────────────────────┐
+   │  Browser: dashboard      │            │                      │      │                    │
+   │  http://192.168.4.1/     │── Wi-Fi ──▶│  web server  :80     │      │                    │
+   │                          │            │  video stream :81    │      │                    │
+   │  press MANUAL / Forward  │── HTTP ───▶│  GET /cmd?c=F        │      │                    │
+   └──────────────────────────┘            │        │             │      │                    │
+                                           │        ▼             │      │                    │
+                                           │   Serial.write       │      │                    │
+                                           │   '~'  'F'  '\n'     │═════▶│  A2  (SoftSerial)  │
+                                           │                      │ wire │  → drives motors   │
+                                           │   /status  ◀─────────│══════│  A3  (telemetry)   │
+                                           │        ▲             │ wire │                    │
+                                           └──────────────────────┘      └────────────────────┘
+                                                                          (optional, via divider)
+```
+
+**The full round trip when you press "▲ Forward" on your phone:**
+
+1. **Browser** → `GET /cmd?c=F` over Wi-Fi to the ESP32-CAM.
+2. **ESP32** wraps it in a frame and writes 3 bytes out of `U0T (GPIO1)`: `~` `F` `\n`.
+3. That travels down **one wire** into the Uno's **`A2`** pin (SoftwareSerial at 9600 baud).
+4. The Uno's `handleCamChar()` sees the `~`, knows a real command is coming, reads `F`, and maps it → forward. Motors spin.
+5. Every 500 ms the Uno writes back on **`A3`**: `#D:37,L:0,R:1,M:1,V:165\n` = distance 37 cm, left clear, right blocked, **mode 1 (MANUAL)**, speed 165.
+6. The ESP32 parses that into `/status` as JSON, and the browser lights the **MANUAL** button green.
+
+**Three details that matter:**
+
+| Question | Answer |
+|---|---|
+| Why is a `~` needed? | The ESP32 also prints its boot logs and debug text on that same wire. Text like `[CAM] Streaming...` contains **C, A, M, S** — which the old code read as mode changes and STOP. Framing means debug text can never steer the car. There is also a 3-second grace period that ignores the boot burst entirely. |
+| Why `A2`/`A3` and not the Uno's hardware RX/TX (`D0`/`D1`)? | Because `D0`/`D1` are the Uno's USB pins. If the ESP32 used them you could not use the Serial Monitor or upload code while the camera is connected. |
+| Why does telemetry use `IO13` instead of the ESP32's `GPIO3`? | `GPIO1`/`GPIO3` (`U0T`/`U0R`) are the ESP32's **flashing pins**. Using `IO13` means you never have to disconnect anything to re-flash the camera. `IO13`/`IO14` are normally the SD-card pins, and this project doesn't use the SD card. |
+| Is 3.3 V → 5 V safe? | Yes, one-way: the ESP32's **3.3 V output** is above the Uno's ~2.5 V "high" threshold, so `U0T → A2` needs no level shifter. The **other** direction is not safe — that's why `A3 → IO13` needs the 1 kΩ / 2 kΩ divider to drop 5 V down to ~3.3 V. |
 
 ---
 
