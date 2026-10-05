@@ -76,6 +76,29 @@ The active one is lit **green** so you always know which mode the Arduino is *re
 
 > **Why you must press a MODE button first:** after upload the car is in **STOP**. In `AUTO` the movement buttons are deliberately ignored. Press **MANUAL** before you expect the arrows to work.
 
+### 🧠 The dashboard is built for ML development too
+
+Beyond the controls, the dashboard is designed to be your **ML workbench**:
+
+- **Live ML panel** — when `3_run_autonomous_ml.py` is driving, the dashboard shows the model's **prediction letter and confidence bar in real time**, so you can watch what your network is thinking as the car moves. Press **CAMERA / ML** and run:
+  ```bash
+  python3 phase3_esp32cam_ml/ml_pipeline/3_run_autonomous_ml.py --ip 192.168.4.1 --mode hybrid
+  ```
+- **Push your own predictions** from any of your scripts — the dashboard will display them:
+  ```python
+  requests.get(f"http://{ip}/ml", params={"p": "F", "c": 94}, timeout=0.3)
+  ```
+  `p` = predicted command (`F G I L R B S`), `c` = confidence 0–100.
+- **A "FOR ML DEVELOPMENT" panel** on the page lists every URL with the correct IP filled in: the MJPEG stream for OpenCV, `/capture` for single frames, `/cmd`, `/status` and `/ml`.
+- **`/status` returns one JSON object** with everything — telemetry and ML together:
+  ```json
+  {"link":true,"dist":37,"irL":0,"irR":1,"mode":1,"speed":165,"age":100,
+   "ml":true,"mlPred":"F","mlConf":94,"mlAge":200}
+  ```
+- **Fully self-contained** — no CDN, no internet needed. The ESP32's own hotspot has no web access, so every byte of CSS/JS is inline.
+
+The design is dark, card-based and **phone-first**, since driving the car from your phone is the main use case. Hold a direction button to drive, release to brake.
+
 ### WHAT YOU CAN DO **TODAY**, SITTING AT YOUR LAPTOP (no battery, no switch, no breadboard)
 
 | # | What | Setup | Works? |
@@ -332,6 +355,17 @@ There are **four independent ways** to confirm the camera works. Work down the l
 | **3** | **Browser** → `http://192.168.4.1/` | The **dashboard**: live video + buttons + the green telemetry box | Video box empty → open `http://192.168.4.1:81/stream` directly; if that also fails, the camera never initialised (back to row 1) |
 | **4** | **Terminal** → `curl -s -o test.jpg http://192.168.4.1/capture` then open `test.jpg` | A single saved JPEG photo | Same as row 3 |
 
+**Every address the project exposes** (handy when you write your own ML scripts):
+
+| URL | What it gives you |
+|---|---|
+| `http://192.168.4.1/` | The control dashboard |
+| `http://192.168.4.1:81/stream` | MJPEG video — what OpenCV opens in `cv2.VideoCapture(...)` |
+| `http://192.168.4.1/capture` | One still JPEG frame |
+| `http://192.168.4.1/cmd?c=F` | Send a driving command (`F G I L R B S`, modes `M A C`, speed `1`–`9`) |
+| `http://192.168.4.1/status` | JSON: `link, dist, irL, irR, mode, speed, age, ml, mlPred, mlConf, mlAge` |
+| `http://192.168.4.1/ml?p=F&c=94` | Push a model prediction so the dashboard displays it |
+
 > **The Uno echoing the ESP32's messages is deliberate.** Because the ESP32's TX wire goes into the Uno's `A2`, and the Uno prints what it receives onto its own USB Serial Monitor, **your Arduino Serial Monitor becomes the ESP32's debug console.** That is how you read the ESP32's IP address and camera errors without buying a USB-TTL adapter.
 
 **The dashboard now also shows live telemetry** (green box): distance in cm, both IR sensors, the Uno's current mode and speed — read from the Arduino over the optional `A3 → IO13` wire. Without that wire it shows *"No telemetry from the Arduino… The car still drives fine without it."*
@@ -504,7 +538,8 @@ autonomous_car/
 ├── complete_car/
 │   └── complete_car.ino                                      # ⭐ THE ONE FILE: full car, 4 modes (M/A/C/S)
 ├── tools/
-│   └── verify_build.py                                       # One-command health check for the whole repo
+│   ├── verify_build.py                                       # One-command health check for the whole repo
+│   └── render_preview.py                                     # Redraws dashboard_preview.png from the firmware
 ├── schematics/
 │   ├── full_wiring_schematic.png                             # High-res Breadboard-less Wiring Schematic
 │   ├── full_wiring_schematic.svg                             # Vector Wiring Schematic

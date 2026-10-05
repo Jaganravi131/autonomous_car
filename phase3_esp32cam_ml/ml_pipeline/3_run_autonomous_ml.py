@@ -169,6 +169,7 @@ def run_live_autopilot(esp_ip: str, model_path: str, mode: str) -> None:
     pilot = AutonomousMLPilot(model_path=model_path, mode=mode)
     stream_url = f"http://{esp_ip}:81/stream"
     cmd_url = f"http://{esp_ip}/cmd"
+    ml_url = f"http://{esp_ip}/ml"   # optional: mirrors predictions to the dashboard
 
     print(f"[AUTOPILOT] Connecting to ESP32-CAM at {stream_url} (Mode: {mode})...")
     cap = cv2.VideoCapture(stream_url)
@@ -184,6 +185,7 @@ def run_live_autopilot(esp_ip: str, model_path: str, mode: str) -> None:
 
     last_sent_cmd = None
     last_send_time = 0.0
+    last_push_time = 0.0
 
     try:
         while True:
@@ -202,6 +204,21 @@ def run_live_autopilot(esp_ip: str, model_path: str, mode: str) -> None:
                     session.get(cmd_url, params={"c": cmd}, timeout=0.25)
                     last_sent_cmd = cmd
                     last_send_time = now
+                except requests.RequestException:
+                    pass
+
+            # --- Mirror the prediction onto the web dashboard ----------------
+            # Purely for visualisation: lets you watch what the model is
+            # predicting in the browser while the car drives. Never affects
+            # driving, and a failure here is deliberately ignored.
+            if now - last_push_time >= 0.20:
+                last_push_time = now
+                try:
+                    session.get(
+                        ml_url,
+                        params={"p": cmd, "c": int(round(conf * 100))},
+                        timeout=0.15,
+                    )
                 except requests.RequestException:
                     pass
 

@@ -372,6 +372,44 @@ def check_dashboard_html():
     ok("framed command protocol present" if "Serial.write('~')" in src
        else "WARNING: firmware does not frame its commands")
 
+    # --- endpoints the dashboard + the Python ML pipeline depend on ---------
+    for uri in ("/", "/cmd", "/capture", "/status", "/ml", "/stream"):
+        if f'.uri = "{uri}"' in src:
+            pass
+        else:
+            bad(f"endpoint {uri} is not registered in the firmware")
+    ok("all 6 HTTP endpoints registered (/, /cmd, /capture, /status, /ml, /stream)")
+
+    # --- every id the script touches must exist in the markup --------------
+    script = js.group(1)
+    ids = set(re.findall(r'id="([^"]+)"', html))
+    used = set(re.findall(r"getElementById\('([^']+)'\)", script))
+    missing = used - ids
+    if missing:
+        bad(f"dashboard JS references missing element ids: {sorted(missing)}")
+    else:
+        ok(f"all {len(used)} element ids referenced by the script exist")
+
+    # --- the four mode buttons the car needs -------------------------------
+    modes = re.findall(r'<button class="mode[^"]*" id="(m-\w)"', html)
+    if len(modes) == 4 and all(f"send('{c}')" in html for c in "MACS"):
+        ok("4 driving-mode buttons present (MANUAL / AUTO / CAMERA / STOP)")
+    else:
+        bad(f"expected 4 mode buttons sending M, A, C and S — found {modes}")
+
+    # --- ML hooks for further development ----------------------------------
+    if 'ml_handler' in src and 'mlPred' in src and 'mlConf' in src:
+        ok("ML endpoint wired: /ml pushes predictions, /status returns them")
+    else:
+        bad("ML endpoint missing — the dashboard cannot show live predictions")
+
+    # --- no external CDN links: the ESP32 access point has no internet -----
+    ext = re.findall(r'(?:src|href)="(https?://[^"]+)"', html)
+    if ext:
+        bad(f"dashboard loads external resources that will fail offline: {ext}")
+    else:
+        ok("dashboard is fully self-contained (no CDN, works on the ESP32 hotspot)")
+
 
 def main():
     print("=" * 74)
