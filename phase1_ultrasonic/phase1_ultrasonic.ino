@@ -11,36 +11,39 @@
  *   - 7.4V - 12V Battery Pack
  *
  * Pin Mapping (Matches schematics/full_wiring_schematic.png):
- *   - D2  -> L298N IN1 (Left Motors Forward)
- *   - D3  -> L298N IN2 (Left Motors Backward)
- *   - D4  -> L298N IN3 (Right Motors Forward)
  *   - D5  -> L298N ENA (Left Motors Speed PWM - Timer0)
  *   - D6  -> L298N ENB (Right Motors Speed PWM - Timer0)
- *   - D7  -> L298N IN4 (Right Motors Backward)
- *   - D8  -> HC-SR04 TRIG
- *   - D9  -> HC-SR04 ECHO
- *   - D10 -> 230° Servo SIGNAL
+ *   - D7  -> 230° Servo SIGNAL
+ *   - D8  -> L298N IN1 (Left Motors Forward)
+ *   - D9  -> L298N IN2 (Left Motors Backward)
+ *   - D10 -> L298N IN3 (Right Motors Forward)
+ *   - D11 -> L298N IN4 (Right Motors Backward)
+ *   - D12 -> HC-SR04 TRIG
+ *   - D13 <- HC-SR04 ECHO
+ *   (D0/D1 stay free for USB upload + Serial Monitor.)
  *
  * Why ENA/ENB are on D5 & D6:
  *   Arduino's <Servo.h> library uses Timer1, which disables PWM on D9 and D10.
  *   Keeping ENA/ENB on D5 and D6 (Timer0) guarantees smooth PWM motor speed!
+ *   IN2 (D9) and IN3 (D10) only ever use digitalWrite(), which Servo.h does
+ *   not affect, so they are safe where they are.
  * ============================================================================
  */
 
 #include <Servo.h>
 
 // -------------------- MOTOR DRIVER PINS (L298N) --------------------
-const int PIN_IN1 = 2;   // Left motors forward
-const int PIN_IN2 = 3;   // Left motors backward
-const int PIN_IN3 = 4;   // Right motors forward
-const int PIN_ENA = 5;   // Left motors PWM speed (Remove 5V jumper on L298N ENA!)
-const int PIN_ENB = 6;   // Right motors PWM speed (Remove 5V jumper on L298N ENB!)
-const int PIN_IN4 = 7;   // Right motors backward
+const int PIN_IN1 = 8;    // Left motors forward
+const int PIN_IN2 = 9;    // Left motors backward
+const int PIN_IN3 = 10;   // Right motors forward
+const int PIN_IN4 = 11;   // Right motors backward
+const int PIN_ENA = 5;    // Left motors PWM speed  (Remove 5V jumper on L298N ENA!)
+const int PIN_ENB = 6;    // Right motors PWM speed (Remove 5V jumper on L298N ENB!)
 
 // -------------------- ULTRASONIC & SERVO PINS ----------------------
-const int PIN_TRIG  = 8;
-const int PIN_ECHO  = 9;
-const int PIN_SERVO = 10;
+const int PIN_TRIG  = 12;
+const int PIN_ECHO  = 13;
+const int PIN_SERVO = 7;
 
 // -------------------- 230-DEGREE SERVO CALIBRATION -----------------
 // Physical range: 0° (extreme right-back) to 230° (extreme left-back)

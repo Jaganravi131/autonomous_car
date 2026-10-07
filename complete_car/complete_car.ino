@@ -4,10 +4,29 @@
  * ============================================================================
  *  This ONE program contains everything, in the order you will test it:
  *
- *    [1] 230° SERVO on D10  +  HC-SR04 ULTRASONIC on D8/D9  (radar scan)
+ *    [1] 230° SERVO on D7  +  HC-SR04 ULTRASONIC on D12/D13  (radar scan)
  *    [2] 2x IR SENSORS on A0 / A1                            (reflex bumpers)
- *    [3] L298N 4WD MOTORS                                    (D2..D7, ENA=D5, ENB=D6)
+ *    [3] L298N 4WD MOTORS on D8..D11 (+ ENA/ENB speed pins)  (drive)
  *    [4] ESP32-CAM + LAPTOP ML MODEL as an ADD-ON            (serial in on A2)
+ *
+ * ----------------------------------------------------------------------------
+ *  PIN MAP — exactly how the car is wired (README table + schematic match,
+ *            and Phase 1 / Phase 2 / Phase 3 sketches use the same numbers)
+ * ----------------------------------------------------------------------------
+ *    D5  -> L298N ENA   left  motors SPEED (PWM, Timer0 - safe with Servo.h)
+ *    D6  -> L298N ENB   right motors SPEED (PWM, Timer0 - safe with Servo.h)
+ *    D7  -> 230° SERVO  signal wire
+ *    D8  -> L298N IN1   left  motors forward
+ *    D9  -> L298N IN2   left  motors backward
+ *    D10 -> L298N IN3   right motors forward
+ *    D11 -> L298N IN4   right motors backward
+ *    D12 -> HC-SR04 TRIG
+ *    D13 <- HC-SR04 ECHO   (also the on-board "L" LED: it flickers on each ping)
+ *    A0  <- LEFT  IR sensor OUT
+ *    A1  <- RIGHT IR sensor OUT
+ *    A2  <- ESP32-CAM U0T (GPIO1 TX)   one direct wire
+ *    A3  -> ESP32-CAM IO13             optional telemetry, via 1k + 2k divider
+ *    D0/D1 are left FREE for USB upload and the Serial Monitor.
  *
  * ----------------------------------------------------------------------------
  *  FOUR MODES  (change mode by typing one letter in the Serial Monitor,
@@ -34,19 +53,20 @@
 #include <SoftwareSerial.h>
 
 // ---------------------------------------------------------------- PIN MAP ---
-#define PIN_IN1        2      // L298N IN1  -> Left motors forward
-#define PIN_IN2        3      // L298N IN2  -> Left motors backward
-#define PIN_IN3        4      // L298N IN3  -> Right motors forward
-#define PIN_IN4        7      // L298N IN4  -> Right motors backward
+// (same numbers as the header above, the README table and the schematic)
+#define PIN_IN1        8      // L298N IN1  -> Left motors forward
+#define PIN_IN2        9      // L298N IN2  -> Left motors backward
+#define PIN_IN3       10      // L298N IN3  -> Right motors forward
+#define PIN_IN4       11      // L298N IN4  -> Right motors backward
 #define PIN_ENA        5      // L298N ENA  -> Left speed  (Timer0 PWM, safe with Servo)
 #define PIN_ENB        6      // L298N ENB  -> Right speed (Timer0 PWM, safe with Servo)
-#define PIN_TRIG       8      // HC-SR04 TRIG
-#define PIN_ECHO       9      // HC-SR04 ECHO
-#define PIN_SERVO     10      // 230 degree servo signal
+#define PIN_TRIG      12      // HC-SR04 TRIG
+#define PIN_ECHO      13      // HC-SR04 ECHO
+#define PIN_SERVO      7      // 230 degree servo signal
 #define PIN_IR_LEFT   A0      // Left  IR sensor OUT
 #define PIN_IR_RIGHT  A1      // Right IR sensor OUT
 #define PIN_CAM_RX    A2      // ESP32-CAM U0T (GPIO1) sends INTO the Uno here
-#define PIN_CAM_TX    A3      // optional telemetry back to ESP32-CAM U0R
+#define PIN_CAM_TX    A3      // optional telemetry back to ESP32-CAM IO13
 
 // --------------------------------------------------------------- SETTINGS ---
 // Servo is a 230 degree unit: 500us = 0 deg, 2500us = 230 deg.

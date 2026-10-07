@@ -10,7 +10,7 @@
  *   - ESP32-CAM 5V            <- Buck Converter OUT+ (5.0V DC)
  *   - ESP32-CAM GND           <- Common GND
  *   - ESP32-CAM U0T (GPIO1)   -> Arduino Uno Pin A2 (SoftwareSerial RX)
- *   - ESP32-CAM U0R (GPIO3)   <- Optional: Arduino Uno Pin A3 (via 1k/2k divider)
+ *   - ESP32-CAM IO13          <- Optional: Arduino Uno Pin A3 (via 1k/2k divider)
  *
  * Endpoints Provided by ESP32-CAM:
  *   - http://<ESP_IP>/         : Interactive Web Control Dashboard (WASD + Buttons)

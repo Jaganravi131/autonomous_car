@@ -122,22 +122,22 @@
   <text x="360" y="445" fill="#fca5a5" font-size="13" font-weight="bold" text-anchor="middle">CONTROL PINS</text>
 
   <rect x="290" y="465" width="140" height="32" rx="5" fill="#1e293b" stroke="#a855f7"/>
-  <text x="360" y="486" fill="#e9d5ff" font-size="13" font-weight="bold" text-anchor="middle">ENA (PWM)  →  D5</text>
+  <text x="360" y="486" fill="#e9d5ff" font-size="12" font-weight="bold" text-anchor="middle">ENA (PWM) ← D5</text>
 
   <rect x="290" y="510" width="140" height="32" rx="5" fill="#1e293b" stroke="#38bdf8"/>
-  <text x="360" y="531" fill="#bae6fd" font-size="13" font-weight="bold" text-anchor="middle">IN1 (Left Fwd) → D2</text>
+  <text x="360" y="531" fill="#bae6fd" font-size="12" font-weight="bold" text-anchor="middle">IN1 (L-Fwd) ← D8</text>
 
   <rect x="290" y="555" width="140" height="32" rx="5" fill="#1e293b" stroke="#38bdf8"/>
-  <text x="360" y="576" fill="#bae6fd" font-size="13" font-weight="bold" text-anchor="middle">IN2 (Left Rev) → D3</text>
+  <text x="360" y="576" fill="#bae6fd" font-size="12" font-weight="bold" text-anchor="middle">IN2 (L-Rev) ← D9</text>
 
   <rect x="290" y="600" width="140" height="32" rx="5" fill="#1e293b" stroke="#38bdf8"/>
-  <text x="360" y="621" fill="#bae6fd" font-size="13" font-weight="bold" text-anchor="middle">IN3 (Right Fwd) → D4</text>
+  <text x="360" y="621" fill="#bae6fd" font-size="12" font-weight="bold" text-anchor="middle">IN3 (R-Fwd) ← D10</text>
 
   <rect x="290" y="645" width="140" height="32" rx="5" fill="#1e293b" stroke="#38bdf8"/>
-  <text x="360" y="666" fill="#bae6fd" font-size="13" font-weight="bold" text-anchor="middle">IN4 (Right Rev) → D7</text>
+  <text x="360" y="666" fill="#bae6fd" font-size="12" font-weight="bold" text-anchor="middle">IN4 (R-Rev) ← D11</text>
 
   <rect x="290" y="690" width="140" height="32" rx="5" fill="#1e293b" stroke="#a855f7"/>
-  <text x="360" y="711" fill="#e9d5ff" font-size="13" font-weight="bold" text-anchor="middle">ENB (PWM)  →  D6</text>
+  <text x="360" y="711" fill="#e9d5ff" font-size="12" font-weight="bold" text-anchor="middle">ENB (PWM) ← D6</text>
 
   <!-- ==================== 5. ARDUINO UNO R3 (CENTER) ==================== -->
   <rect x="540" y="340" width="460" height="530" rx="14" fill="url(#arduinoGrad)" stroke="#7dd3fc" stroke-width="3"/>
@@ -147,21 +147,22 @@
 
   <!-- Digital Pins Column (Left inside Arduino) -->
   <rect x="560" y="420" width="205" height="430" rx="8" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5"/>
-  <text x="662" y="445" fill="#38bdf8" font-size="14" font-weight="bold" text-anchor="middle">DIGITAL HEADER (D2–D10)</text>
+  <text x="662" y="445" fill="#38bdf8" font-size="14" font-weight="bold" text-anchor="middle">DIGITAL HEADER (D5–D13)</text>
 
-  <text x="575" y="482" fill="#bae6fd" font-size="13" font-weight="bold">D2  ←  L298N IN1 (Left Fwd)</text>
-  <text x="575" y="517" fill="#bae6fd" font-size="13" font-weight="bold">D3  ←  L298N IN2 (Left Rev)</text>
-  <text x="575" y="552" fill="#bae6fd" font-size="13" font-weight="bold">D4  ←  L298N IN3 (Right Fwd)</text>
-  <text x="575" y="587" fill="#e9d5ff" font-size="13" font-weight="bold">D5 (PWM) ← L298N ENA</text>
-  <text x="575" y="622" fill="#e9d5ff" font-size="13" font-weight="bold">D6 (PWM) ← L298N ENB</text>
-  <text x="575" y="657" fill="#bae6fd" font-size="13" font-weight="bold">D7  ←  L298N IN4 (Right Rev)</text>
-  <line x1="572" y1="676" x2="752" y2="676" stroke="#334155" stroke-width="1.5"/>
-  <text x="575" y="704" fill="#6ee7b7" font-size="13" font-weight="bold">D8  →  HC-SR04 TRIG</text>
-  <text x="575" y="739" fill="#6ee7b7" font-size="13" font-weight="bold">D9  ←  HC-SR04 ECHO</text>
-  <line x1="572" y1="758" x2="752" y2="758" stroke="#334155" stroke-width="1.5"/>
-  <text x="575" y="786" fill="#fde047" font-size="12" font-weight="bold">D10 (PWM) → 230° SERVO</text>
-  <text x="575" y="818" fill="#94a3b8" font-size="11">D0/D1 kept FREE for USB</text>
-  <text x="575" y="835" fill="#94a3b8" font-size="11">code upload &amp; Serial Monitor!</text>
+  <text x="575" y="485" fill="#e9d5ff" font-size="12" font-weight="bold">D5 (PWM) → L298N ENA</text>
+  <text x="575" y="518" fill="#e9d5ff" font-size="12" font-weight="bold">D6 (PWM) → L298N ENB</text>
+  <line x1="572" y1="535" x2="752" y2="535" stroke="#334155" stroke-width="1.5"/>
+  <text x="575" y="558" fill="#fde047" font-size="12" font-weight="bold">D7 → 230° SERVO signal</text>
+  <line x1="572" y1="575" x2="752" y2="575" stroke="#334155" stroke-width="1.5"/>
+  <text x="575" y="598" fill="#bae6fd" font-size="12" font-weight="bold">D8 → L298N IN1 (L-Fwd)</text>
+  <text x="575" y="631" fill="#bae6fd" font-size="12" font-weight="bold">D9 → L298N IN2 (L-Rev)</text>
+  <text x="575" y="664" fill="#bae6fd" font-size="12" font-weight="bold">D10 → L298N IN3 (R-Fwd)</text>
+  <text x="575" y="697" fill="#bae6fd" font-size="12" font-weight="bold">D11 → L298N IN4 (R-Rev)</text>
+  <line x1="572" y1="714" x2="752" y2="714" stroke="#334155" stroke-width="1.5"/>
+  <text x="575" y="738" fill="#6ee7b7" font-size="12" font-weight="bold">D12 → HC-SR04 TRIG</text>
+  <text x="575" y="771" fill="#6ee7b7" font-size="12" font-weight="bold">D13 ← HC-SR04 ECHO</text>
+  <text x="575" y="805" fill="#94a3b8" font-size="11">D0/D1 kept FREE for USB</text>
+  <text x="575" y="822" fill="#94a3b8" font-size="11">code upload &amp; Serial Monitor!</text>
 
   <!-- Power & Analog Pins Column (Right inside Arduino) -->
   <rect x="780" y="420" width="200" height="430" rx="8" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5"/>
@@ -184,7 +185,7 @@
   <text x="880" y="714" fill="#cbd5e1" font-size="11" text-anchor="middle">Direct Wire (3.3V→5V Safe!)</text>
 
   <rect x="795" y="733" width="170" height="48" rx="5" fill="#1e293b" stroke="#94a3b8"/>
-  <text x="880" y="754" fill="#e2e8f0" font-size="12" font-weight="bold" text-anchor="middle">A3 (SoftTX) → ESP32 RX</text>
+  <text x="880" y="754" fill="#e2e8f0" font-size="12" font-weight="bold" text-anchor="middle">A3 (TX) → ESP32 IO13</text>
   <text x="880" y="772" fill="#94a3b8" font-size="10" text-anchor="middle">(Optional telemetry via divider)</text>
 
   <rect x="795" y="792" width="170" height="46" rx="5" fill="#172554" stroke="#60a5fa"/>
@@ -200,15 +201,15 @@
   <rect x="1098" y="355" width="215" height="105" rx="6" fill="#0f172a" stroke="#6ee7b7"/>
   <text x="1205" y="376" fill="#6ee7b7" font-size="13" font-weight="bold" text-anchor="middle">HC-SR04 ULTRASONIC</text>
   <text x="1112" y="398" fill="#fca5a5" font-size="12">• VCC   → +5.0V Rail (or Uno 5V)</text>
-  <text x="1112" y="416" fill="#6ee7b7" font-size="12">• TRIG  → Arduino Pin D8</text>
-  <text x="1112" y="434" fill="#6ee7b7" font-size="12">• ECHO  → Arduino Pin D9</text>
+  <text x="1112" y="416" fill="#6ee7b7" font-size="12">• TRIG  → Arduino Pin D12</text>
+  <text x="1112" y="434" fill="#6ee7b7" font-size="12">• ECHO  → Arduino Pin D13</text>
   <text x="1112" y="452" fill="#cbd5e1" font-size="12">• GND   → Common GND</text>
 
   <!-- 230 deg Servo -->
   <rect x="1328" y="355" width="215" height="105" rx="6" fill="#0f172a" stroke="#fde047"/>
   <text x="1435" y="376" fill="#fde047" font-size="13" font-weight="bold" text-anchor="middle">230° ROTATION SERVO</text>
   <text x="1342" y="398" fill="#fca5a5" font-size="12">• RED (VCC) → Buck +5.0V Rail</text>
-  <text x="1342" y="416" fill="#fde047" font-size="12">• ORG/YLW   → Arduino Pin D10</text>
+  <text x="1342" y="416" fill="#fde047" font-size="12">• ORG/YLW   → Arduino Pin D7</text>
   <text x="1342" y="434" fill="#cbd5e1" font-size="12">• BRN/BLK   → Common GND</text>
   <text x="1342" y="452" fill="#93c5fd" font-size="11">Center = 115° (1500 µs pulse)</text>
 
@@ -238,7 +239,7 @@
   <text x="1110" y="735" fill="#fca5a5" font-size="11.5" font-weight="bold">• 5V Pin         ← Buck Converter +5.0V Rail (Needs stable 5V/2A!)</text>
   <text x="1110" y="758" fill="#cbd5e1" font-size="11.5" font-weight="bold">• GND Pin        ← Common GND Rail</text>
   <text x="1110" y="781" fill="#fde047" font-size="11.5" font-weight="bold">• U0T (GPIO1 TX) → Arduino Pin A2 (SoftSerial RX) [1 Direct Wire]</text>
-  <text x="1110" y="804" fill="#93c5fd" font-size="11">• U0R (GPIO3 RX) ← Optional: Uno A3 via 1kΩ/2kΩ divider (telemetry)</text>
+  <text x="1110" y="804" fill="#93c5fd" font-size="11">• IO13 (telemetry in) ← Optional: Uno A3 via 1kΩ/2kΩ divider</text>
   <text x="1110" y="826" fill="#a7f3d0" font-size="11">• Streams MJPEG Video over Wi-Fi → Python ML → Sends F/L/R/B/S to Uno</text>
   <text x="1110" y="845" fill="#94a3b8" font-size="10.5">• Flash note: Jumper IO0-to-GND while uploading code, then remove IO0 jumper.</text>
 
@@ -256,13 +257,13 @@
   <!-- Buck OUT- to Common GND Rail -->
   <path d="M 652 248 L 765 243" fill="none" stroke="#94a3b8" stroke-width="4"/>
 
-  <!-- L298N Control Wires to Arduino D2-D7 -->
-  <path d="M 430 481 L 505 481 L 505 582 L 560 582" fill="none" stroke="#a855f7" stroke-width="2.5"/>
-  <path d="M 430 526 L 485 526 L 485 478 L 560 478" fill="none" stroke="#38bdf8" stroke-width="2.5"/>
-  <path d="M 430 571 L 495 571 L 495 512 L 560 512" fill="none" stroke="#38bdf8" stroke-width="2.5"/>
-  <path d="M 430 616 L 515 616 L 515 547 L 560 547" fill="none" stroke="#38bdf8" stroke-width="2.5"/>
-  <path d="M 430 661 L 525 661 L 525 652 L 560 652" fill="none" stroke="#38bdf8" stroke-width="2.5"/>
-  <path d="M 430 706 L 532 706 L 532 617 L 560 617" fill="none" stroke="#a855f7" stroke-width="2.5"/>
+  <!-- L298N Control Wires to Arduino D5, D6 and D8-D11 -->
+  <path d="M 430 481 L 560 481" fill="none" stroke="#a855f7" stroke-width="2.5"/>
+  <path d="M 430 706 L 450 706 L 450 514 L 560 514" fill="none" stroke="#a855f7" stroke-width="2.5"/>
+  <path d="M 430 526 L 515 526 L 515 594 L 560 594" fill="none" stroke="#38bdf8" stroke-width="2.5"/>
+  <path d="M 430 571 L 500 571 L 500 627 L 560 627" fill="none" stroke="#38bdf8" stroke-width="2.5"/>
+  <path d="M 430 616 L 485 616 L 485 660 L 560 660" fill="none" stroke="#38bdf8" stroke-width="2.5"/>
+  <path d="M 430 661 L 470 661 L 470 693 L 560 693" fill="none" stroke="#38bdf8" stroke-width="2.5"/>
 
   <!-- Sensors to Arduino -->
   <path d="M 1000 410 L 1080 410" fill="none" stroke="#34d399" stroke-width="3" stroke-dasharray="5,3"/>

@@ -3,13 +3,21 @@
  * PHASE 3 (PART A): ARDUINO UNO — ML ACTUATOR + HARDWARE SAFETY REFLEX CONTROLLER
  * ============================================================================
  * Hardware Connections (Phase 1 + Phase 2 + ESP32-CAM UART Bridge):
- *   - D2..D7  -> L298N Motor Driver (IN1=D2, IN2=D3, IN3=D4, ENA=D5, ENB=D6, IN4=D7)
- *   - D8, D9  -> HC-SR04 Ultrasonic (TRIG=D8, ECHO=D9)
- *   - D10     -> 230° Servo Motor Signal
- *   - A0, A1  -> Left IR Sensor (A0), Right IR Sensor (A1)
- *   - A2      -> ESP32-CAM U0T (GPIO1 TX) [1 Direct Female-to-Male Jumper Wire]
- *   - A3      -> ESP32-CAM U0R (GPIO3 RX) [Optional: via 1k/2k divider for telemetry]
- *   - GND     -> Common GND shared with ESP32-CAM, Buck Converter, and L298N
+ *   - D5  -> L298N ENA (Left Motors Speed PWM - Timer0)
+ *   - D6  -> L298N ENB (Right Motors Speed PWM - Timer0)
+ *   - D7  -> 230° Servo SIGNAL
+ *   - D8  -> L298N IN1 (Left Motors Forward)
+ *   - D9  -> L298N IN2 (Left Motors Backward)
+ *   - D10 -> L298N IN3 (Right Motors Forward)
+ *   - D11 -> L298N IN4 (Right Motors Backward)
+ *   - D12 -> HC-SR04 TRIG
+ *   - D13 <- HC-SR04 ECHO
+ *   - A0  <- Left IR sensor OUT
+ *   - A1  <- Right IR sensor OUT
+ *   - A2  <- ESP32-CAM U0T (GPIO1 TX) [1 Direct Female-to-Male Jumper Wire]
+ *   - A3  -> ESP32-CAM IO13 [Optional telemetry: A3 --1k--> IO13, plus 2k from IO13 to GND]
+ *   - GND -> Common GND shared with ESP32-CAM, Buck Converter, and L298N
+ *   (D0/D1 stay free for USB upload + Serial Monitor.)
  *
  * Supported Commands from ESP32-CAM (9600 baud over A2/A3 or USB Serial):
  *   'F' = Forward Straight
@@ -29,17 +37,17 @@
 #include <SoftwareSerial.h>
 
 // -------------------- MOTOR DRIVER PINS (L298N) --------------------
-const int PIN_IN1 = 2;
-const int PIN_IN2 = 3;
-const int PIN_IN3 = 4;
-const int PIN_ENA = 5;
-const int PIN_ENB = 6;
-const int PIN_IN4 = 7;
+const int PIN_IN1 = 8;    // Left motors forward
+const int PIN_IN2 = 9;    // Left motors backward
+const int PIN_IN3 = 10;   // Right motors forward
+const int PIN_IN4 = 11;   // Right motors backward
+const int PIN_ENA = 5;    // Left motors PWM speed  (Timer0)
+const int PIN_ENB = 6;    // Right motors PWM speed (Timer0)
 
 // -------------------- SENSORS & 230° SERVO PINS --------------------
-const int PIN_TRIG     = 8;
-const int PIN_ECHO     = 9;
-const int PIN_SERVO    = 10;
+const int PIN_TRIG     = 12;
+const int PIN_ECHO     = 13;
+const int PIN_SERVO    = 7;
 const int PIN_IR_LEFT  = A0;
 const int PIN_IR_RIGHT = A1;
 

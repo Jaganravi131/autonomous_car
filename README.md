@@ -9,7 +9,7 @@ Everything is already on GitHub and verified, so you can clone it right now:
 ```bash
 git clone https://github.com/Jaganravi131/autonomous_car.git
 cd autonomous_car
-python3 tools/verify_build.py      # optional: proves your copy is intact → "18 passed, 0 failed"
+python3 tools/verify_build.py      # optional: proves your copy is intact → "40 passed, 0 failed"
 ```
 
 **Then do these 4 things, in this order:**
@@ -103,7 +103,7 @@ The design is dark, card-based and **phone-first**, since driving the car from y
 
 | # | What | Setup | Works? |
 |:--:|---|---|:--:|
-| **1** | **Test the 230° servo + ultrasonic radar** | Uno on USB → servo `SIG`→`D10`, `VCC`/`GND`; HC-SR04 `TRIG`→`D8`, `ECHO`→`D9` | ✅ **100%** |
+| **1** | **Test the 230° servo + ultrasonic radar** | Uno on USB → servo `SIG`→`D7`, `VCC`/`GND`; HC-SR04 `TRIG`→`D12`, `ECHO`→`D13` | ✅ **100%** |
 | **2** | **Test + calibrate the 2 IR sensors** | Uno on USB → IR `OUT`→`A0`/`A1`, `VCC`/`GND` + turn the blue pot | ✅ **100%** |
 | **3** | **Flash the ESP32-CAM and watch its live video** | Uno on USB used as the programmer (see Step 3A-0), then `http://192.168.4.1` | ✅ **100%** |
 | **4** | **Train the ML model on the laptop** | `python3 1_collect_data.py --simulate` → `python3 2_train_model.py` | ✅ **100%** |
@@ -166,7 +166,9 @@ Here is how every wire connects **with zero breadboard**:
 ## 3. Master Pin-to-Pin Connection Table
 
 > **Why Motor PWM (`ENA`, `ENB`) is on `D5` and `D6`:**  
-> On Arduino Uno, `<Servo.h>` uses hardware **Timer1**, which disables `analogWrite()` PWM on pins `D9` and `D10`. Putting `ENA` and `ENB` on **`D5` and `D6` (Timer0)** ensures your 4WD motor speed control works smoothly alongside the 230° servo!
+> On Arduino Uno, `<Servo.h>` uses hardware **Timer1**, which disables `analogWrite()` PWM on pins `D9` and `D10`. Putting `ENA` and `ENB` on **`D5` and `D6` (Timer0)** ensures your 4WD motor speed control works smoothly alongside the 230° servo! `D9`/`D10` carry `IN2`/`IN3`, which only ever use plain `digitalWrite()` and are not affected.
+>
+> **Pin map at a glance (identical in Phase 1, Phase 2, Phase 3 and `complete_car`):** `D5`=ENA · `D6`=ENB · `D7`=servo · `D8`=IN1 · `D9`=IN2 · `D10`=IN3 · `D11`=IN4 · `D12`=TRIG · `D13`=ECHO · `A0`/`A1`=IR · `A2`/`A3`=ESP32-CAM link.
 
 | Component | Module Pin | Connects To | Phase Added | Notes |
 | :--- | :--- | :--- | :---: | :--- |
@@ -176,16 +178,16 @@ Here is how every wire connects **with zero breadboard**:
 | **Buck Converter (LM2596)** | `OUT-` | **Common GND Rail** | Stage 0 | Common ground reference |
 | **Left 2 Motors (FL + RL)** | Red / Black | L298N `OUT1` & `OUT2` | Phase 1 | Wire Front-Left & Rear-Left in parallel |
 | **Right 2 Motors (FR + RR)**| Red / Black | L298N `OUT3` & `OUT4` | Phase 1 | Wire Front-Right & Rear-Right in parallel |
-| **L298N Motor Driver** | `IN1` | Arduino **`D2`** | Phase 1 | Left motors forward |
-| **L298N Motor Driver** | `IN2` | Arduino **`D3`** | Phase 1 | Left motors backward |
-| **L298N Motor Driver** | `IN3` | Arduino **`D4`** | Phase 1 | Right motors forward |
-| **L298N Motor Driver** | `ENA` | Arduino **`D5` (PWM)** | Phase 1 | Remove 5V jumper cap on `ENA` |
-| **L298N Motor Driver** | `ENB` | Arduino **`D6` (PWM)** | Phase 1 | Remove 5V jumper cap on `ENB` |
-| **L298N Motor Driver** | `IN4` | Arduino **`D7`** | Phase 1 | Right motors backward |
+| **L298N Motor Driver** | `IN1` | Arduino **`D8`** | Phase 1 | Left motors forward |
+| **L298N Motor Driver** | `IN2` | Arduino **`D9`** | Phase 1 | Left motors backward |
+| **L298N Motor Driver** | `IN3` | Arduino **`D10`** | Phase 1 | Right motors forward |
+| **L298N Motor Driver** | `IN4` | Arduino **`D11`** | Phase 1 | Right motors backward |
+| **L298N Motor Driver** | `ENA` | Arduino **`D5` (PWM)** | Phase 1 | **Remove the 5V jumper cap on `ENA` before wiring `D5` to it** (cap left on + `D5` unconnected = motors always at full speed) |
+| **L298N Motor Driver** | `ENB` | Arduino **`D6` (PWM)** | Phase 1 | **Remove the 5V jumper cap on `ENB` before wiring `D6` to it** (cap left on + `D6` unconnected = motors always at full speed) |
 | **HC-SR04 Ultrasonic** | `VCC` / `GND`| `+5.0V Rail` / `Common GND` | Phase 1 | Mounted on top of 230° servo |
-| **HC-SR04 Ultrasonic** | `TRIG` | Arduino **`D8`** | Phase 1 | Ultrasonic trigger pulse |
-| **HC-SR04 Ultrasonic** | `ECHO` | Arduino **`D9`** | Phase 1 | Ultrasonic echo input |
-| **230° Rotation Servo** | `SIG` (Org/Ylw)| Arduino **`D10`** | Phase 1 | `1500 µs` pulse = **`115°` physical center** |
+| **HC-SR04 Ultrasonic** | `TRIG` | Arduino **`D12`** | Phase 1 | Ultrasonic trigger pulse |
+| **HC-SR04 Ultrasonic** | `ECHO` | Arduino **`D13`** | Phase 1 | Ultrasonic echo input |
+| **230° Rotation Servo** | `SIG` (Org/Ylw)| Arduino **`D7`** | Phase 1 | `1500 µs` pulse = **`115°` physical center** |
 | **230° Rotation Servo** | `VCC` / `GND`| **Buck `+5.0V Rail`** / `Common GND` | Phase 1 | Power from Buck 5V (not Arduino 5V!) |
 | **Left IR Sensor** | `OUT` | Arduino **`A0`** | Phase 2 | Front-left corner obstacle / line sensor |
 | **Right IR Sensor** | `OUT` | Arduino **`A1`** | Phase 2 | Front-right corner obstacle / line sensor |
@@ -486,9 +488,15 @@ I cannot put your hardware on a bench, so here is exactly **what has been proven
 **Re-run these checks yourself at any time — one command, no hardware needed:**
 ```bash
 python3 tools/verify_build.py
-# → RESULT: 18 passed, 0 failed   (the 1 skip is the ESP32 sketch, which needs the Arduino IDE)
+# → RESULT: 40 passed, 0 failed   (the 1 skip is the ESP32 sketch, which needs the Arduino IDE)
 ```
-It re-checks the sketch folder rules, compiles all sketches, runs the whole ML pipeline, verifies every README link, and confirms the pin numbers in the wiring table still match `complete_car.ino`.
+It re-checks the sketch folder rules, compiles all sketches, runs the whole ML pipeline, verifies every README link and the dashboard — and, for the **pin map**, it:
+
+1. checks the pin numbers at the top of **all four sketches** (Phase 1, Phase 2, Phase 3 controller, `complete_car`) against the car's real wiring (`WIRING` table inside `tools/verify_build.py`);
+2. checks every row of the README wiring table, every label in both schematics, and every pin written in a code comment;
+3. **actually runs each sketch** on a simulated Arduino and records which pins the real code toggles — it must touch *exactly* `D5 D6 D8 D9 D10 D11 D12 D13 A0 A1` (+ the `A2`/`A3` camera link) and drive the L298N legally in forward / reverse / spin-left / spin-right / stop.
+
+I tested the checker itself by injecting 11 deliberate mistakes (wrong pin in one sketch, stale README row, stale schematic label, a raw pin number, a forward command that drives both direction pins, …) — it caught all 11.
 
 ### ⚠️ Requires real hardware to confirm (do these on the bench first)
 
@@ -509,15 +517,17 @@ The ESP32-CAM prints debug text on the very same wire it sends commands on. Text
 
 ## 7. Troubleshooting & FAQ (expert advice you may have read elsewhere)
 
-**Q: I read that `PIN_IN2` on Pin 3 is a "critical Timer2 conflict" with the Servo library. Must I move it?**
-**A: No. That advice is wrong — keep Pin 3.** Verified facts about this exact code:
-- `Pin 3` is used **only** with `digitalWrite(PIN_IN2, ...)` (line 194 of `complete_car.ino`). It is **never** used with `analogWrite()` or `tone()`.
-- Timer2 is only involved in PWM when you call `analogWrite(3, ...)` or `analogWrite(11, ...)`, or `tone()`. **None of those are used anywhere in this project.** A plain `digitalWrite()` and `pinMode(..., OUTPUT)` do not touch any timer at all.
-- Therefore there is **zero** Timer2 involvement, and no "interrupt timing clash" is possible from Pin 3.
-- The advice is also **self-contradictory**: it says Pin 3 is bad because it shares **Timer2**, then suggests moving to **Pin 11 — which is also a Timer2 PWM pin.** Moving to Pin 11 would be strictly worse, so **do not do that.**
-- Why PWM lives on `D5`/`D6`: `Servo.h` takes **Timer1**, which kills `analogWrite()` (not `digitalWrite()`) on `D9`/`D10`. Putting `ENA`/`ENB` on Timer0 pins `D5`/`D6` is the actual fix, and it is already applied. `D9` is used only as a `pulseIn()` ECHO input, which uses no timer.
+**Q: I read that the Servo library "conflicts" with PWM / Timer2 pins. Is this pin map safe?**
+**A: Yes — it is safe, and it is checked by `tools/verify_build.py`.** Facts about this exact code (`D5`–`D13` map above):
+- `Servo.h` takes **Timer1**, which only breaks `analogWrite()` on **`D9` and `D10`**. Those pins are `IN2` and `IN3`, and the code only ever calls plain `digitalWrite()` on them — so they are unaffected.
+- The *only* `analogWrite()` (PWM) pins used are `ENA = D5` and `ENB = D6` (**Timer0**), so motor speed control works fine next to the servo on `D7`.
+- `D11` (`IN4`) is a Timer2 PWM-capable pin, but nothing in this project calls `analogWrite(11)` or `tone()`, so Timer2 is never involved. `digitalWrite()` / `pinMode()` do not touch any timer.
+- `D11`/`D12`/`D13` are also the SPI / ICSP pins (MOSI/MISO/SCK). Nothing here uses SPI, so there is no clash.
+- `D13` (`ECHO`) is also the on-board **`L` LED**, so it flickers every time the ultrasonic sensor pings — that is normal and a handy "sensor is alive" indicator. Uno-R3-style boards buffer that LED with a small op-amp (the `LM358` chip — your board has one), so it should not disturb the echo signal.
+- *Optional hardening:* the Uno blinks `D13` for a moment on every reset/upload. If you want to be extra careful, put a **330 Ω – 1 kΩ resistor in series with the ECHO wire** — an input pin draws no current, so it does not change the reading, but it removes any chance of the two chips "fighting" during that blink.
 
-> If you simply *prefer* to move `IN2` off Pin 3 for peace of mind, use **`D12`** (a plain digital pin with no timer, no PWM, no SPI use) — **never `D11`**. It is a 1-line change plus 1 wire; nothing else in the project breaks. Ask and it will be updated everywhere (sketches + schematic + table).
+**Q: A wheel side spins the wrong way (or the car goes forward when I press reverse). Do I have to rewire?**
+**A: No.** Either swap the **two wires of that side's motor pair** at the L298N `OUT` terminals, **or** swap the numbers in the four `#define PIN_IN1 … PIN_IN4` lines at the top of the sketch (`IN1`/`IN2` = left side, `IN3`/`IN4` = right side). The same trick fixes `TRIG`/`ECHO` if you ever plug them in the other way round (distance always reads "no echo"): swap `PIN_TRIG` and `PIN_ECHO`.
 
 **Q: Does `Servo.h` + `SoftwareSerial` on `A2`/`A3` cause glitches?**
 **A: No, at the 9600 baud used here.** The Servo interrupt is only a few microseconds long, while one bit at 9600 baud lasts ~104 µs — a ~30x margin. (This pairing is only risky at 115200 baud, which this project never uses.) `A2`/`A3` are `PCINT10`/`PCINT11` on the ATmega328P, which exist and work correctly for `SoftwareSerial`. If commands ever look garbled, the real cause is almost always the ESP32-CAM's 3.3V TX into the Uno's 5V RX (a valid but ~300 mV margin) — fix by keeping the wire short, or add a 2N7000/BSS138 level shifter.

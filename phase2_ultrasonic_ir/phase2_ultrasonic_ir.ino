@@ -9,6 +9,17 @@
  *   - Both IR VCC         -> +5.0V Rail (from Buck Converter)
  *   - Both IR GND         -> Common GND
  *
+ * Full pin map (identical to Phase 1, plus the two IR sensors):
+ *   - D5  -> L298N ENA (Left Motors Speed PWM - Timer0)
+ *   - D6  -> L298N ENB (Right Motors Speed PWM - Timer0)
+ *   - D7  -> 230° Servo SIGNAL
+ *   - D8  -> L298N IN1 (Left Motors Forward)
+ *   - D9  -> L298N IN2 (Left Motors Backward)
+ *   - D10 -> L298N IN3 (Right Motors Forward)
+ *   - D11 -> L298N IN4 (Right Motors Backward)
+ *   - D12 -> HC-SR04 TRIG
+ *   - D13 <- HC-SR04 ECHO
+ *
  * Supports Two Selectable Modes (change OPERATING_MODE below):
  *   1 = MODE_OBSTACLE_FUSION (Default):
  *       IR sensors face forward-left & forward-right at ~35° angles to protect
@@ -28,17 +39,17 @@
 #define OPERATING_MODE          MODE_OBSTACLE_FUSION
 
 // -------------------- MOTOR DRIVER PINS (L298N) --------------------
-const int PIN_IN1 = 2;   // Left motors forward
-const int PIN_IN2 = 3;   // Left motors backward
-const int PIN_IN3 = 4;   // Right motors forward
-const int PIN_ENA = 5;   // Left motors PWM speed (Timer0)
-const int PIN_ENB = 6;   // Right motors PWM speed (Timer0)
-const int PIN_IN4 = 7;   // Right motors backward
+const int PIN_IN1 = 8;    // Left motors forward
+const int PIN_IN2 = 9;    // Left motors backward
+const int PIN_IN3 = 10;   // Right motors forward
+const int PIN_IN4 = 11;   // Right motors backward
+const int PIN_ENA = 5;    // Left motors PWM speed  (Timer0)
+const int PIN_ENB = 6;    // Right motors PWM speed (Timer0)
 
 // -------------------- ULTRASONIC & 230° SERVO PINS -----------------
-const int PIN_TRIG  = 8;
-const int PIN_ECHO  = 9;
-const int PIN_SERVO = 10;
+const int PIN_TRIG  = 12;
+const int PIN_ECHO  = 13;
+const int PIN_SERVO = 7;
 
 // -------------------- 2x IR SENSOR PINS (ADDED IN PHASE 2) ---------
 const int PIN_IR_LEFT  = A0;
